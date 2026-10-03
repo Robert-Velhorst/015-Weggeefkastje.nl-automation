@@ -31,6 +31,7 @@ Untrusted inputs include browser requests, public reports, caretaker form bodies
 - Passwords use scrypt hashes.
 - Opaque session tokens and caretaker tokens are stored as SHA-256 hashes.
 - Session cookies are HttpOnly and SameSite=Strict.
+- Production requires HTTPS and Secure cookies, including on loopback, and disables HTTP bootstrap entirely. Initial credentials are supplied to a local CLI over stdin.
 - Authenticated writes require the session-specific CSRF header.
 - Workspace data queries are scoped by workspace ID.
 - Roles are owner, operator and viewer. Source/caretaker/publication mutations require owner or operator.
@@ -53,6 +54,10 @@ Untrusted inputs include browser requests, public reports, caretaker form bodies
 - Database, export, backup, restore and support paths are constrained to APP_DATA_DIR.
 - Provider secrets remain server-side and are not returned by diagnostics/public configuration.
 - SQLite uses foreign keys, WAL mode, busy timeout, migrations and integrity diagnostics.
+- SQLite writes use FULL synchronous durability. Future schemas are rejected and failed migrations close the database handle.
+- Expiring worker leases and guarded completion recover crashed tasks without allowing an old claimant to complete a newer claim. Intake remains at-least-once and idempotent, not an external exactly-once guarantee.
+- Snapshots use SQLite's online backup API with integrity/FK validation and SHA-256. Offline restores validate/migrate a staging copy before replacing the database and preserve recovery copies.
+- Production Compose isolates the app port behind Caddy and runs app services non-root with read-only filesystems and bounded resources/logs. Off-host backup and alert routing still require operator configuration.
 
 ## Residual risks
 

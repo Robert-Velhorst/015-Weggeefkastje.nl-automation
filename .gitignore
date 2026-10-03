@@ -3,8 +3,12 @@ dist/
 dist-web/
 coverage/
 .env
+.env.*
+!.env.example
+!.env.production.example
 data/*.sqlite
 data/*.sqlite-*
+data/*.sqlite.*
 data/exports/
 data/review/
 data/backups/

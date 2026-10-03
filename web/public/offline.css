@@ -1,0 +1,8 @@
+* { box-sizing: border-box; }
+body { margin: 0; color: #193b59; background: #e8f2fa; font: 16px/1.75 'Segoe UI', system-ui, sans-serif; }
+main { max-width: 630px; padding: 45px 25px 65px; margin: 0 auto; text-align: center; }
+.brand { font: bold 24px Georgia, serif; margin-bottom: 70px; }
+.symbol { display: inline-flex; justify-content: center; align-items: center; width: 80px; height: 80px; border-radius: 50%; background: #ffe078; font-size: 44px; }
+h1 { font: 500 clamp(36px, 7vw, 52px)/1.15 Georgia, serif; letter-spacing: -.04em; }
+a { display: inline-block; color: white; background: #193b59; padding: 12px 22px; text-decoration: none; border-radius: 7px; margin-top: 20px; }
+a:focus-visible { outline: 3px solid #193b59; outline-offset: 5px; }

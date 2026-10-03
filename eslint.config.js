@@ -6,6 +6,7 @@ export default tseslint.config(
   { ignores: ['dist/**', 'dist-web/**', 'node_modules/**', 'coverage/**', 'data/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  { files: ['qa/**/*.mjs', 'scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {

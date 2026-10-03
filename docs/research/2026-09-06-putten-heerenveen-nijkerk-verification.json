@@ -1,0 +1,351 @@
+{
+  "checkedAt": "2026-09-05T22:36:43.000Z",
+  "scope": "15 bestaande OSM-kandidaten: Putten 5, Heerenveen 3, Nijkerk 4, Nijkerkerveen 3. Onderzoeksnotities, geen publicatie.",
+  "method": "Openbare zoekmachine en rechtstreeks gelezen pagina's; geen ingelogde sociale bronnen, contactverzoeken of bezoeken ter plaatse. Raadpleegdatum bewijst niet de actualiteit van de inhoud.",
+  "permissionReference": "https://puttencity.nl/privacy-statement-en-disclaimer/",
+  "cases": [
+    {
+      "sourceRecordId": "node/11449521117",
+      "input": {
+        "outcome": "conflicting_evidence",
+        "findings": "PuttenCity noemt De Potgieter op Potgieterstraat 44, maar vermeldt postcode 3881 WL. De oorspronkelijke BAG-zoekcontext geeft 3881 WN. De locatiepagina noemt voedsel en verzorgingsartikelen. Geen gedateerde fysieke controle aangetroffen. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Potgieterstraat 44, 3881WN Putten (nummeraanduiding 0273200000014489). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "PuttenCity vereist voorafgaande toestemming voor overname; die is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Putten",
+        "sourceUrls": [
+          "https://puttencity.nl/buurtkastje/buurtkastje-de-potgieter/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Potgieterstraat+44+Putten&fq=type%3Aadres&rows=100",
+          "https://puttencity.nl/privacy-statement-en-disclaimer/"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Potgieterstraat",
+        "house": "44",
+        "city": "Putten"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Potgieterstraat 44, 3881WN Putten",
+        "nummeraanduidingId": "0273200000014489",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476770297",
+      "input": {
+        "outcome": "corroborated",
+        "findings": "Een afzonderlijke PuttenCity-locatiepagina vermeldt een buurtkastje op Halvinkhuizerweg 84, 3882 LA Putten, met onder meer voedsel en verzorgingsartikelen. Daarmee is een expliciete adresbron gevonden, maar geen gedateerde controle ter plaatse. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Halvinkhuizerweg 84, 3882LA Putten (nummeraanduiding 0273200000019484). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "PuttenCity vereist voorafgaande toestemming voor overname; die is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Putten",
+        "sourceUrls": [
+          "https://puttencity.nl/buurtkastje/buurtkastje-halvinkhuizerweg/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Halvinkhuizerweg+84+Putten&fq=type%3Aadres&rows=100",
+          "https://puttencity.nl/privacy-statement-en-disclaimer/"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Halvinkhuizerweg",
+        "house": "84",
+        "city": "Putten"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Halvinkhuizerweg 84, 3882LA Putten",
+        "nummeraanduidingId": "0273200000019484",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476956245",
+      "input": {
+        "outcome": "corroborated",
+        "findings": "De beheerdersbeschrijving op PuttenCity noemt Vervoornstraat 27, 3882 XK Putten en gratis, anoniem brengen en halen. Gebruikelijk aanbod omvat levensmiddelen, verzorging, menstruatieproducten en kinderspullen; voorraad wisselt. Woningstichting Putten bevestigde het adres op 14 april 2022. Dat oude bericht is geen actuele inspectie. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Vervoornstraat 27, 3882XK Putten (nummeraanduiding 0273200000010038). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "PuttenCity vereist voorafgaande toestemming voor overname; die is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Putten",
+        "sourceUrls": [
+          "https://puttencity.nl/buurtkastje/buurtkastje-vervoornstraat/",
+          "https://www.wsputten.nl/buurtkastje/page.html",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Vervoornstraat+27+Putten&fq=type%3Aadres&rows=100",
+          "https://puttencity.nl/privacy-statement-en-disclaimer/"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Vervoornstraat",
+        "house": "27",
+        "city": "Putten"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Vervoornstraat 27, 3882XK Putten",
+        "nummeraanduidingId": "0273200000010038",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476959032",
+      "input": {
+        "outcome": "corroborated",
+        "findings": "De locatiebeschrijving op PuttenCity noemt Buurtkastje Zuiderveld op Zuiderveldweg 14, 3881 LJ Putten: gratis levensmiddelen en verzorgingsproducten, in principe het hele jaar toegankelijk. Dit is een bronverklaring, geen garantie over opening of voorraad vandaag. Geen nieuwe fysieke controle uitgevoerd. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Zuiderveldweg 14, 3881LJ Putten (nummeraanduiding 0273200000003980). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "PuttenCity vereist voorafgaande toestemming voor overname; die is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Putten",
+        "sourceUrls": [
+          "https://puttencity.nl/buurtkastje/buurtkastje-zuiderveld/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Zuiderveldweg+14+Putten&fq=type%3Aadres&rows=100",
+          "https://puttencity.nl/privacy-statement-en-disclaimer/"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Zuiderveldweg",
+        "house": "14",
+        "city": "Putten"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Zuiderveldweg 14, 3881LJ Putten",
+        "nummeraanduidingId": "0273200000003980",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11477030705",
+      "input": {
+        "outcome": "corroborated",
+        "findings": "PuttenCity vermeldt Het Rode Buurtkastje op Rie Staalstraat 1, 3882 KW Putten, met voedsel en verzorgingsartikelen. De verwijzing op de pagina naar een artikel uit 2014 is niet gebruikt als actualiteitsbewijs. Een gedateerde recente aanwezigheidscontrole ontbreekt. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Rie Staalstraat 1, 3882KW Putten (nummeraanduiding 0273200000022924). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "PuttenCity vereist voorafgaande toestemming voor overname; die is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Putten",
+        "sourceUrls": [
+          "https://puttencity.nl/buurtkastje/het-rode-buurtkastje/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Rie+Staalstraat+1+Putten&fq=type%3Aadres&rows=100",
+          "https://puttencity.nl/privacy-statement-en-disclaimer/"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Rie Staalstraat",
+        "house": "1",
+        "city": "Putten"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Rie Staalstraat 1, 3882KW Putten",
+        "nummeraanduidingId": "0273200000022924",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476710619",
+      "input": {
+        "outcome": "corroborated",
+        "findings": "De Protestantse Gemeente Heerenveen vermeldt haar deelkast expliciet op Zijlroede 1. Volgens de organisatie mogen mensen zonder betaling, lidmaatschap of inkomenscontrole producten halen; het betreft ongekoelde supermarktproducten, waaronder houdbaar voedsel en verzorging. De pagina heeft geen vastgestelde controledatum voor de fysieke aanwezigheid. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Zijlroede 1, 8446MS Heerenveen (nummeraanduiding 0074200000393799). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "Hergebruikstoestemming voor de aanvullende bron is niet vastgesteld. Actualiteit en bezoekersingang controleren. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Heerenveen",
+        "sourceUrls": [
+          "https://protestantsegemeenteheerenveen.nl/portfolio/deelkasten-2/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Zijlroede+1+Heerenveen&fq=type%3Aadres&rows=100"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Zijlroede",
+        "house": "1",
+        "city": "Heerenveen"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Zijlroede 1, 8446MS Heerenveen",
+        "nummeraanduidingId": "0074200000393799",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476920848",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "De Veense Courant noemt Wouter van de Kampstraat 4 als locatie van een tijdelijk voedselkastje, met vervanging gepland in 2022. Dit is historische adresbevestiging, geen bewijs dat het kastje er in september 2026 nog staat. Het latere openingsbericht over Westerveenstraat noemt deze straat ook, zonder nieuw adresbewijs. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Wouter van de Kampstraat 4, 3864GG Nijkerkerveen (nummeraanduiding 0267200000017011). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "Hergebruikstoestemming voor de aanvullende bron is niet vastgesteld. Eerst een recente bevestiging van aanwezigheid en toegang verkrijgen. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Nijkerkerveen",
+        "sourceUrls": [
+          "https://www.nijkerkerveen.org/ook-nijkerkerveen-heeft-een-buurtkastje/",
+          "https://www.nijkerkerveen.org/tweede-buurtkastje-van-start-gegaan-in-nijkerkerveen/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Wouter+van+de+Kampstraat+4+Nijkerkerveen&fq=type%3Aadres&rows=100"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Wouter van de Kampstraat",
+        "house": "4",
+        "city": "Nijkerkerveen"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Wouter van de Kampstraat 4, 3864GG Nijkerkerveen",
+        "nummeraanduidingId": "0267200000017011",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11477014383",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Een historisch openingsbericht in De Veense Courant noemt de voortuin van Westerveenstraat 47 als buurtkastlocatie voor levensmiddelen en ongebruikte verzorgingsproducten. Het bericht bewijst niet dat dit kastje in september 2026 nog aanwezig en toegankelijk is. PDOK/BAG leverde één exacte straat-huisnummer-woonplaatsmatch: Westerveenstraat 47, 3864EM Nijkerkerveen (nummeraanduiding 0267200000016358). Dit bevestigt alleen het adres, niet het kastje.",
+        "remainingChecks": "Hergebruikstoestemming voor de aanvullende bron is niet vastgesteld. Eerst een recente bevestiging van aanwezigheid en toegang verkrijgen. Koppeling tussen het bronadres en het oorspronkelijke kaartpunt blijft een onderzoeksconclusie, geen fysieke vaststelling. Niet automatisch publiceren.",
+        "searchArea": "Nijkerkerveen",
+        "sourceUrls": [
+          "https://www.nijkerkerveen.org/tweede-buurtkastje-van-start-gegaan-in-nijkerkerveen/",
+          "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=Westerveenstraat+47+Nijkerkerveen&fq=type%3Aadres&rows=100"
+        ],
+        "checkedAt": "2026-09-05T22:38:27.289Z"
+      },
+      "bagLookup": {
+        "street": "Westerveenstraat",
+        "house": "47",
+        "city": "Nijkerkerveen"
+      },
+      "physicalVisit": false,
+      "bagCheck": {
+        "address": "Westerveenstraat 47, 3864EM Nijkerkerveen",
+        "nummeraanduidingId": "0267200000016358",
+        "evidenceFile": "data/exports/osm-verification-2026-09-06/bag-exact-checks.json",
+        "uniqueExactMatch": true
+      }
+    },
+    {
+      "sourceRecordId": "node/11476372603",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Badweg 4 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Heerenveen",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476372603"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "\"buurtkastje\" \"Badweg\"",
+        "\"Heerenveen\" \"Badweg\" \"deelkast\"",
+        "\"Heerenveen\" \"Badweg 4\" kastje"
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476670920",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Pijlkruidhof 2 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Heerenveen",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476670920"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "\"buurtkastje\" \"Pijlkruidhof\"",
+        "\"Heerenveen\" \"Pijlkruidhof\" kastje",
+        "\"Heerenveen\" \"Pijlkruidhof 2\" kastje"
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476753872",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Rotsvlinder 124 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Nijkerk",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476753872"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "buurtkastje Nijkerk \"Rotsvlinder\"",
+        "\"Nijkerk\" \"Rotsvlinder\" \"voedselkast\""
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476770296",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Van der Waalshof 8 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Nijkerk",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476770296"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "buurtkastje \"Van der Waalshof\"",
+        "\"Van der Waalshof\" \"deelkast\""
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476885477",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Beatrixstraat 2-101 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Nijkerk",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476885477"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "\"Nijkerk\" \"Beatrixstraat\" \"buurtkastje\"",
+        "\"Beatrixstraat\" \"Nijkerk\" voedselkastje"
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476896037",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Vetkamp 116 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Nijkerk",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476896037"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "\"Nijkerk\" \"Vetkamp\" kastje",
+        "\"Vetkamp\" \"weggeefkastje\""
+      ],
+      "physicalVisit": false
+    },
+    {
+      "sourceRecordId": "node/11476771422",
+      "input": {
+        "outcome": "needs_evidence",
+        "findings": "Gerichte openbare webzoekopdrachten op straat/plaats met buurtkastje, weggeefkastje of deelkast leverden in deze begrensde ronde geen onafhankelijke bevestiging van dit kastje op. Van Noortstraat 11 is uitsluitend eerder gevonden nabijgelegen BAG-zoekcontext; het adres is niet als kastadres bevestigd. Geen zoekresultaat vinden betekent niet dat het kastje niet bestaat.",
+        "remainingChecks": "Een specifieke kastjesbron of bevestiging van de beheerder is nodig voor exact bezoekersadres, huidige aanwezigheid, toegang en gebruikelijk aanbod. Toegestane bronverwerking vaststellen; geen woonadres op basis van nabijheid publiceren.",
+        "searchArea": "Nijkerkerveen",
+        "sourceUrls": [
+          "https://www.openstreetmap.org/node/11476771422"
+        ],
+        "checkedAt": "2026-09-05T22:36:43.000Z"
+      },
+      "queries": [
+        "\"buurtkastje\" \"Van Noortstraat\"",
+        "\"Nijkerkerveen\" \"Van Noortstraat\" kast voedsel"
+      ],
+      "physicalVisit": false
+    }
+  ]
+}

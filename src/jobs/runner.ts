@@ -104,6 +104,12 @@ function addressVerifier(config: AppConfig, dependencies: IntakeDependencies): A
 
 export async function collectSocialEvidence(config: AppConfig, enabledSourceKeys: ReadonlySet<string>): Promise<SocialIngestionBatch> {
   const batches: SocialIngestionBatch[] = [];
+  if (enabledSourceKeys.has(NEXTDOOR_SOURCE_KEY) && (!config.provider.nextdoorExportPath || !existsSync(config.provider.nextdoorExportPath))) {
+    throw new Error('Enabled Nextdoor source requires an existing approved export.');
+  }
+  if (enabledSourceKeys.has(FACEBOOK_SOURCE_KEY) && (!config.provider.facebookConfigured || parseFacebookPageContextsConfig(config.provider.facebookPageContextsJson).length === 0)) {
+    throw new Error('Enabled Facebook source requires credentials and approved Page contexts.');
+  }
   if (enabledSourceKeys.has(NEXTDOOR_SOURCE_KEY) && config.provider.nextdoorExportPath && existsSync(config.provider.nextdoorExportPath)) {
     batches.push(parseApprovedSocialExportJsonl(readFileSync(config.provider.nextdoorExportPath, 'utf8'), 'nextdoor'));
   }
@@ -130,7 +136,12 @@ export async function runSocialIntake(
   const actorUserId = database.workspaceOperatorUserId(workspaceId);
   if (!actorUserId) throw new Error('Social intake needs a workspace owner or operator.');
   const enabledSources = new Set([FACEBOOK_SOURCE_KEY, NEXTDOOR_SOURCE_KEY].filter((key) => sourceIsEnabled(database, workspaceId, key)));
-  const batch = await collectSocialEvidence(config, enabledSources);
+  let batch: SocialIngestionBatch;
+  try { batch = await collectSocialEvidence(config, enabledSources); }
+  catch (error) {
+    for (const key of enabledSources) database.recordSourceCheck(workspaceId, database.getSourceByKey(workspaceId, key)!.id, 'error');
+    throw error;
+  }
   let imported = 0;
   const verifier = addressVerifier(config, dependencies);
   if (enabledSources.has(NEXTDOOR_SOURCE_KEY)) {
@@ -229,13 +240,29 @@ export async function executeJob(database: AppDatabase, config: AppConfig, job: 
 }
 
 export async function runOneJob(database: AppDatabase, config: AppConfig): Promise<boolean> {
-  const job = database.claimNextJob();
+  const job = database.claimNextJob(config.workerJobLeaseMs);
   if (!job) return false;
+  const leaseToken = job.leaseToken!;
+  const heartbeat = setInterval(() => {
+    try {
+      if (!database.renewJobLease(job.id, leaseToken)) clearInterval(heartbeat);
+    } catch {
+      // Keep the last lease timestamp; another worker can recover after it expires.
+      console.error(JSON.stringify({ event: 'worker.lease_renewal_failed', jobId: job.id }));
+    }
+  }, Math.min(30_000, Math.floor(config.workerJobLeaseMs / 3)));
+  heartbeat.unref();
+  console.log(JSON.stringify({ event: 'job.started', jobId: job.id, jobType: job.jobType, attempt: job.attempts }));
   try {
     await executeJob(database, config, job);
-    database.completeJob(job.id);
-  } catch (error) {
-    database.failJob(job.id, error instanceof Error ? error.message : String(error));
+    const completed = database.completeJob(job.id, leaseToken);
+    console.log(JSON.stringify({ event: completed ? 'job.succeeded' : 'job.lease_lost', jobId: job.id }));
+  } catch {
+    // Provider errors can contain URLs with access tokens; never persist raw errors.
+    database.failJob(job.id, 'Task failed; check provider configuration, permissions and availability.', leaseToken);
+    console.error(JSON.stringify({ event: 'job.failed', jobId: job.id, jobType: job.jobType }));
+  } finally {
+    clearInterval(heartbeat);
   }
   return true;
 }

@@ -23,6 +23,9 @@ const envSchema = z.object({
   COOKIE_SECURE: z.enum(['true', 'false']).optional(),
   ENABLE_DEMO_MODE: z.enum(['true', 'false']).default('false'),
   WORKER_POLL_MS: z.coerce.number().int().min(250).max(60_000).default(5_000),
+  WORKER_JOB_LEASE_MS: z.coerce.number().int().min(30_000).max(3_600_000).default(300_000),
+  BACKUP_INTERVAL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
+  BACKUP_KEEP_COUNT: z.coerce.number().int().min(2).max(365).default(14),
   PDOK_LOCATIESERVER_BASE_URL: z.string().url().default('https://api.pdok.nl'),
   PDOK_TIMEOUT_MS: z.coerce.number().int().min(250).max(10_000).default(5_000),
   FACEBOOK_GRAPH_ACCESS_TOKEN: optionalString(),
@@ -54,6 +57,9 @@ export interface AppConfig {
   secureCookies: boolean;
   demoMode: boolean;
   workerPollMs: number;
+  workerJobLeaseMs: number;
+  backupIntervalHours: number;
+  backupKeepCount: number;
   addressVerification: {
     baseUrl: string;
     timeoutMs: number;
@@ -101,17 +107,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd = process.c
     ? resolveWithin(dataDir, isAbsolute(parsed.BUURTKASTJESKAART_EXPORT_PATH) ? parsed.BUURTKASTJESKAART_EXPORT_PATH : resolve(cwd, parsed.BUURTKASTJESKAART_EXPORT_PATH))
     : undefined;
   const networkHost = !['127.0.0.1', 'localhost', '::1'].includes(parsed.HOST);
-  const secureCookies = parsed.COOKIE_SECURE ? parsed.COOKIE_SECURE === 'true' : parsed.NODE_ENV === 'production' && networkHost;
+  const secureCookies = parsed.COOKIE_SECURE ? parsed.COOKIE_SECURE === 'true' : parsed.NODE_ENV === 'production';
+  const baseUrl = parsed.APP_BASE_URL ? new URL(parsed.APP_BASE_URL) : undefined;
+  if (baseUrl && (!['http:', 'https:'].includes(baseUrl.protocol) || baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || baseUrl.pathname !== '/')) {
+    throw new Error('APP_BASE_URL must be an HTTP(S) origin without credentials, path, query or fragment.');
+  }
 
   if (networkHost && parsed.ALLOW_NETWORK_BINDING !== 'true') {
     throw new Error('Network binding is disabled. Set ALLOW_NETWORK_BINDING=true only behind a trusted HTTPS reverse proxy.');
   }
   if (parsed.NODE_ENV === 'production') {
     if (parsed.ENABLE_DEMO_MODE === 'true') throw new Error('Demo mode is forbidden in production.');
-    if (networkHost && (!parsed.APP_BASE_URL || !parsed.APP_BASE_URL.startsWith('https://'))) {
-      throw new Error('Production network binding requires an HTTPS APP_BASE_URL.');
-    }
-    if (networkHost && !secureCookies) throw new Error('Secure cookies are required for production network binding.');
+    if (baseUrl?.protocol !== 'https:') throw new Error('Production requires an HTTPS APP_BASE_URL, including behind a loopback proxy.');
+    if (!secureCookies) throw new Error('Secure cookies are required in production.');
+    if (parsed.ALLOW_REMOTE_SETUP === 'true') throw new Error('Remote first setup is forbidden in production. Use the local setup command.');
   }
   if (Boolean(parsed.FACEBOOK_GRAPH_ACCESS_TOKEN) !== Boolean(parsed.FACEBOOK_GRAPH_API_VERSION)) {
     throw new Error('Facebook access token and API version must be configured together.');
@@ -142,11 +151,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd = process.c
     trustProxy: parsed.TRUST_PROXY === 'true',
     allowNetworkBinding: parsed.ALLOW_NETWORK_BINDING === 'true',
     allowRemoteSetup: parsed.ALLOW_REMOTE_SETUP === 'true',
-    baseUrl: parsed.APP_BASE_URL,
+    baseUrl: baseUrl?.origin,
     publicWorkspaceId: parsed.PUBLIC_WORKSPACE_ID,
     secureCookies,
     demoMode: parsed.ENABLE_DEMO_MODE === 'true',
     workerPollMs: parsed.WORKER_POLL_MS,
+    workerJobLeaseMs: parsed.WORKER_JOB_LEASE_MS,
+    backupIntervalHours: parsed.BACKUP_INTERVAL_HOURS,
+    backupKeepCount: parsed.BACKUP_KEEP_COUNT,
     addressVerification: {
       baseUrl: pdokUrl.origin,
       timeoutMs: parsed.PDOK_TIMEOUT_MS,

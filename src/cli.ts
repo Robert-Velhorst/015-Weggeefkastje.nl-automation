@@ -1,10 +1,14 @@
 import 'dotenv/config';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { loadConfig, publicConfig, resolveWithin } from './config.js';
 import { AppDatabase } from './db/appDatabase.js';
 import { runOneJob, scheduleRecurringJobs } from './jobs/runner.js';
+import { createVerifiedBackup, restoreVerifiedBackup } from './operations/backup.js';
+import { setupSchema } from './auth/setupInput.js';
+
+process.umask(0o077);
 
 const config = loadConfig();
 const [command = 'help', ...args] = process.argv.slice(2);
@@ -18,25 +22,19 @@ function value(flag: string): string | undefined {
   return index >= 0 ? args[index + 1] : undefined;
 }
 
-function backupPath(): string {
-  const folder = resolveWithin(config.dataDir, 'backups');
-  mkdirSync(folder, { recursive: true });
-  return join(folder, `weggeefkastjes-${stamp()}.sqlite`);
-}
-
-async function backup(): Promise<string> {
-  if (!existsSync(config.databasePath)) throw new Error('Database does not exist yet. Run migrate or the server first.');
-  const destination = backupPath();
-  const database = new AppDatabase(config.databasePath);
-  try {
-    await database.backupTo(destination);
-  } finally {
-    database.close();
-  }
-  return destination;
-}
-
 async function main(): Promise<void> {
+  if (command === 'bootstrap') {
+    if (process.stdin.isTTY) throw new Error('Provide setup JSON on stdin, never as command-line arguments.');
+    let input = '';
+    for await (const chunk of process.stdin) {
+      input += chunk.toString();
+      if (Buffer.byteLength(input) > 4096) throw new Error('Setup input exceeds 4 KB.');
+    }
+    const setup = setupSchema.parse(JSON.parse(input));
+    const database = new AppDatabase(config.databasePath);
+    try { console.log(JSON.stringify(database.bootstrapAdmin(setup))); } finally { database.close(); }
+    return;
+  }
   if (command === 'migrate') {
     const database = new AppDatabase(config.databasePath);
     console.log(JSON.stringify({ database: config.databasePath, migration: database.migrationResult }, null, 2));
@@ -69,22 +67,14 @@ async function main(): Promise<void> {
     return;
   }
   if (command === 'backup') {
-    console.log(await backup());
+    console.log(await createVerifiedBackup(config));
     return;
   }
   if (command === 'restore') {
     const sourceArg = value('--from');
-    if (!sourceArg || !args.includes('--confirm')) throw new Error('Usage: npm run cli -- restore --from data/backups/file.sqlite --confirm');
+    if (!sourceArg || !args.includes('--confirm') || !args.includes('--confirm-services-stopped')) throw new Error('Stop app, worker and backup service; then restore --from data/backups/file.sqlite --confirm --confirm-services-stopped');
     const source = resolveWithin(config.dataDir, resolve(sourceArg));
-    if (!existsSync(source)) throw new Error(`Backup not found: ${source}`);
-    const recoveryCopy = existsSync(config.databasePath) ? await backup() : undefined;
-    mkdirSync(dirname(config.databasePath), { recursive: true });
-    copyFileSync(source, config.databasePath);
-    const database = new AppDatabase(config.databasePath);
-    const diagnostics = database.diagnostics();
-    database.close();
-    if (!(diagnostics as { ok: boolean }).ok) throw new Error(`Restored database failed validation; previous copy: ${recoveryCopy ?? 'none'}`);
-    console.log(JSON.stringify({ restoredFrom: source, recoveryCopy, diagnostics }, null, 2));
+    console.log(JSON.stringify(await restoreVerifiedBackup(config, source), null, 2));
     return;
   }
   if (command === 'export') {
@@ -122,10 +112,11 @@ async function main(): Promise<void> {
     console.log(`${createHash('sha256').update(readFileSync(file)).digest('hex')}  ${basename(file)}`);
     return;
   }
-  console.log('Commands: migrate, doctor, reconcile, ready-for-tunnel, backup, restore, export, support-bundle, worker, checksum');
+  console.log('Commands: bootstrap (JSON on stdin), migrate, doctor, reconcile, ready-for-tunnel, backup, restore, export, support-bundle, worker, checksum');
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
+main().catch(() => {
+  // Validation errors may contain supplied secrets. Keep failure output private-data free.
+  console.error('Command failed. Check arguments, permissions, input validity and the operator runbook.');
   process.exitCode = 1;
 });

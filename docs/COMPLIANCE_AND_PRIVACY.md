@@ -65,6 +65,14 @@ A lower-confidence record, an address that fails verification or a source withou
 - Social material is evidence intake, not automatically trusted public truth. Store a short necessary summary, source URL only where appropriate and observation time; do not retain full conversations when not necessary.
 - Do not request or infer a resident’s location from their browser. The public search field is user-entered text.
 
+## Resident map and installable web app
+
+The public site uses Google Maps JavaScript only after the resident explicitly opens the map. No browser geolocation is requested. Explain that Google receives connection data when its map is opened; a navigation link also leaves the site. Browser API keys are public by design and must be restricted to the intended origins and API. Billing must be configured by the operator, never silently activated.
+
+Map pins, list results and KML exports share the same public visibility and category filters. Categories describe usual offerings, not current inventory or opening hours. A KML export is a dated public-data snapshot with source credit; it is not a live Google My Maps sync. Do not put internal evidence, source authorizations or caretaker tokens in the export.
+
+The service worker caches only the offline fallback, not resident searches, API responses, Google resources, operator pages or bearer-link pages. Sharing a URL shares its search/filter text; residents should not type private details in search fields. The public Google-capable document uses an explicit Maps CSP allowlist; privileged routes keep the stricter default policy.
+
 ## Reports, removals and freshness
 
 A public correction report creates an internal pending request. It cannot directly change or remove a public location. An operator must resolve or dismiss it, or a holder of a scoped caretaker link can update their own record. This preserves a complete audit trail and reduces the risk of malicious or mistaken removal.

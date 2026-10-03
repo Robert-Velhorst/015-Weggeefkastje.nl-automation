@@ -8,6 +8,9 @@ RUN npm ci --ignore-scripts=false
 COPY tsconfig*.json vite.config.ts vitest.config.ts eslint.config.js ./
 COPY src ./src
 COPY web ./web
+# Public, origin-restricted browser values; never pass server/provider secrets here.
+ARG VITE_GOOGLE_MAPS_API_KEY
+ARG VITE_GOOGLE_MAPS_MAP_ID
 RUN npm run build && npm prune --omit=dev
 
 FROM node:24-bookworm-slim AS runtime
@@ -21,5 +24,5 @@ COPY --from=build --chown=appuser:appuser /app/package.json ./package.json
 RUN mkdir -p /app/data && chown appuser:appuser /app/data
 USER appuser
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["node", "dist/healthcheck.js", "server"]
 CMD ["node", "dist/server-main.js"]

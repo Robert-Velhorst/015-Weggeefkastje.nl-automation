@@ -7,5 +7,6 @@ coverage
 data
 qa
 .env
+.env.*
 *.sqlite
 *.log

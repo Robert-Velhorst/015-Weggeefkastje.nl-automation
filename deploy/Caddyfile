@@ -1,0 +1,28 @@
+{
+	log default {
+		format filter {
+			wrap json
+			fields {
+				request delete
+				uri delete
+			}
+		}
+	}
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 30s
+			idle 2m
+		}
+		max_header_size 16KB
+	}
+}
+
+{$APP_DOMAIN} {
+	request_body {
+		max_size 256KB
+	}
+	reverse_proxy app:3000
+	# No access log; also remove request objects from operational error logs above.
+	# Do not add another public proxy hop without reviewing Express trust-proxy settings.
+}

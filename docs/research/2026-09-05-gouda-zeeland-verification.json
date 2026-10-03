@@ -1,0 +1,102 @@
+{
+  "checkedAt": "2026-09-05T22:53:57+02:00",
+  "cases": [
+    {
+      "sourceRecordId": "node/11476238554",
+      "status": "street_level_recent_exact_address_unverified",
+      "note": "Een openbare Reddit-discussie van ongeveer twee maanden vóór deze controle meldt onafhankelijk dat er in de bocht van de Blommesteinsingel een buurtkast staat. Er worden geen huisnummer, toegangsgegevens of categorieën genoemd. Blommesteinsingel 13 blijft daarom uitsluitend zoekcontext van het dichtstbijzijnde BAG-adres en mag niet als adres van het kastje worden gepubliceerd. Toestemming voor hergebruik van de Reddit-melding is niet vastgesteld.",
+      "corroboratingUrl": "https://www.reddit.com/r/Gouda/comments/1ux04nh/buurtkastjes/"
+    },
+    {
+      "sourceRecordId": "node/11476285683",
+      "status": "exact_address_current_official_category_limited",
+      "note": "Sociaal Team Gouda vermeldt Hannah's kastjes momenteel op Sint Josephstraat 19, 2806 WE Gouda als uitgiftepunt voor gratis menstruatieproducten. Een gids van Humanitas Midden-Holland bevestigt onafhankelijk hetzelfde exacte adres en dezelfde functie. Het OSM-punt ligt volgens de opgeslagen BAG-zoekcontext op 2,98 meter van dit adres. De koppeling met dit specifieke OSM-punt blijft echter een onderbouwde gevolgtrekking op basis van hetzelfde expliciete adres en de nabijheid; er is geen ingemeten of ter plaatse bevestigde relatie. Hiermee zijn een bezoekadres en een beperkte productcategorie bevestigd, maar niet een breder assortiment of openingstijden. Toestemming voor hergebruik is niet vastgesteld; citeer of link naar de bron in plaats van brontekst over te nemen.",
+      "corroboratingUrl": "https://sociaalteamgouda.nl/onderwerp/uitgiftepunten-menstruatieproducten/",
+      "additionalUrls": [
+        "https://www.humanitas.nl/siteassets/locaties/midden-holland/gids-gratis-en-goedkoop-in-gouda.pdf"
+      ]
+    },
+    {
+      "sourceRecordId": "node/12367977464",
+      "status": "searched_no_independent_cupboard_evidence",
+      "note": "Gezocht op de exacte kandidaat Aderpolderweg 23 en op bredere Goudse termen voor weggeefkastjes. Openbare resultaten bevestigden alleen gewone adrescontext, niet het bestaan van een kastje, bezoekerstoegang of categorieën. Het dichtstbijzijnde BAG-adres blijft uitsluitend zoekcontext. Toestemming voor hergebruik is niet van toepassing, omdat geen bevestigende bron over een kastje is gevonden."
+    },
+    {
+      "sourceRecordId": "node/13089379467",
+      "status": "searched_no_independent_cupboard_evidence",
+      "note": "Gezocht op de exacte kandidaat Boelhouwerstraat 4 en op bredere Goudse termen voor weggeefkastjes. De resultaten wijzen op een woon- of bedrijfsadres, maar noemen geen openbaar kastje, toegang of categorieën. Het dichtstbijzijnde BAG-adres mag niet als bewijs voor een kastje worden gebruikt. Toestemming voor hergebruik is niet van toepassing, omdat geen bevestigende bron over een kastje is gevonden."
+    },
+    {
+      "sourceRecordId": "node/13089379468",
+      "status": "searched_no_independent_cupboard_evidence",
+      "note": "Gezocht op de exacte kandidaat Dunantsingel 314 en op bredere Goudse termen voor weggeefkastjes. Actuele pagina's vermelden op dit adres de Ontmoetingskerk/ICF, maar geen gevonden bron noemt daar een weggeefkastje, toegang voor bezoekers of categorieën. De overeenkomst met het adres van deze locatie is geen bevestiging van een kastje. Toestemming voor hergebruik is niet van toepassing, omdat geen bevestigende bron over een kastje is gevonden."
+    },
+    {
+      "sourceRecordId": "node/13093973984",
+      "status": "searched_no_independent_cupboard_evidence",
+      "note": "Gezocht op de exacte kandidaat Johan de Wittlaan 31 en op bredere Goudse termen voor weggeefkastjes. Actuele bronnen vermelden op dit adres het Leger des Heils en een tweedehandskledingwinkel, maar geen weggeefkastje op het ingetekende punt. Leid het bestaan van een kastje niet af uit de aanwezige organisatie. Toestemming voor hergebruik is niet van toepassing, omdat geen bevestigende bron over een kastje is gevonden."
+    },
+    {
+      "sourceRecordId": "node/13097200230",
+      "status": "street_level_recent_exact_address_unverified",
+      "note": "Een openbare Reddit-discussie van ongeveer twee maanden vóór deze controle meldt onafhankelijk een kastje aan het Gloriantplantsoen, maar noemt geen huisnummer. De melding bevestigt niet dat Gloriantplantsoen 115 het bezoekadres is en vermeldt evenmin toegang of categorieën. Het dichtstbijzijnde BAG-adres blijft uitsluitend zoekcontext. Toestemming voor hergebruik van de Reddit-melding is niet vastgesteld.",
+      "corroboratingUrl": "https://www.reddit.com/r/Gouda/comments/1ux04nh/buurtkastjes/"
+    },
+    {
+      "sourceRecordId": "node/11476631753",
+      "status": "exact_address_current_official",
+      "note": "Gemeente Maashorst vermeldt Deelhuisje Brand 59 momenteel en geeft aan dat het bij de oprit staat. De eigen krant over hulp bij geldzorgen van de gemeente noemt het exacte adres Brand 59, Zeeland. Het OSM-punt ligt volgens de opgeslagen BAG-zoekcontext op 15,94 meter van dit adres. De koppeling met dit specifieke OSM-punt blijft een onderbouwde gevolgtrekking op basis van hetzelfde expliciete adres en de nabijheid; er is geen ingemeten of ter plaatse bevestigde relatie. De gemeentelijke beschrijving bevestigt gratis boodschappen en voedseldeling; specifieke openingstijden worden niet genoemd. Toestemming voor hergebruik is niet vastgesteld; link naar de officiële bronnen in plaats van de inhoud over te nemen.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/",
+      "additionalUrls": [
+        "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf"
+      ]
+    },
+    {
+      "sourceRecordId": "node/11476898345",
+      "status": "historical_exact_address_not_currently_listed",
+      "note": "Een oudere officiële krant van Gemeente Maashorst vermeldt Grenssteen 17, eenmaal afgedrukt als 'Grensteen 17', bij de deelhuisjes in Zeeland. Een Geocaching-beschrijving uit 2023 noemt Grenssteen eveneens op straatniveau. Op de actuele gemeentelijke pagina met deelhuisjes ontbreekt Grenssteen. De historische adresvermelding is bevestigd, maar het huidige bestaan en de toegang niet. Publiceer deze locatie niet als actief zonder nieuwe bevestiging door een mens of beheerder. Toestemming voor hergebruik is niet vastgesteld.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf",
+      "additionalUrls": [
+        "https://www.geocaching.com/geocache/GCA5C62_3-deelhuisjes-zeeland-voederheil",
+        "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/"
+      ]
+    },
+    {
+      "sourceRecordId": "node/11476908620",
+      "status": "exact_address_current_listing_conflicts_with_removal_notice",
+      "note": "Gemeente Maashorst vermeldt momenteel een deelhuisje aan de Voederheil. De officiële gemeentekrant noemt Voederheil 21a, eenmaal afgedrukt als 'Voederhei 21a'. De Geocaching-pagina voor dit kastje is echter gearchiveerd met een melding van de eigenaar dat het deelhuisje zou verdwijnen. Historisch vermeldde die bron ook voedsel, een deelkoelkast, toestemming voor plaatsing in een privétuin en toegang van 08.00 tot 20.00 uur. Het exacte adres kan in BAG worden genormaliseerd, maar voor actieve publicatie is nieuwe menselijke bevestiging nodig omdat het bewijs over het bestaan tegenstrijdig is. Toestemming voor hergebruik is niet vastgesteld.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/",
+      "additionalUrls": [
+        "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf",
+        "https://www.geocaching.com/geocache/GCA5C62_3-deelhuisjes-zeeland-voederheil"
+      ]
+    },
+    {
+      "sourceRecordId": "node/11476950177",
+      "status": "exact_address_current_official",
+      "note": "Gemeente Maashorst vermeldt momenteel een deelhuisje aan het Luttelveld. De eigen krant van de gemeente noemt het exacte adres Luttelveld 8, Zeeland. Het OSM-punt ligt volgens de opgeslagen BAG-zoekcontext op 4,23 meter van dit adres. De koppeling met dit specifieke OSM-punt blijft een onderbouwde gevolgtrekking op basis van hetzelfde expliciete adres en de nabijheid; er is geen ingemeten of ter plaatse bevestigde relatie. De gemeentelijke beschrijving bevestigt gratis boodschappen en voedseldeling; specifieke openingstijden worden niet genoemd. Toestemming voor hergebruik is niet vastgesteld; link naar de officiële bronnen in plaats van de inhoud over te nemen.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/",
+      "additionalUrls": [
+        "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf"
+      ]
+    },
+    {
+      "sourceRecordId": "node/11476959033",
+      "status": "exact_address_current_official",
+      "note": "Gemeente Maashorst vermeldt Deelhuisje Brand 18 momenteel. De eigen krant van de gemeente noemt het exacte adres Brand 18, Zeeland. Het OSM-punt ligt volgens de opgeslagen BAG-zoekcontext op 10,29 meter van dit adres. De koppeling met dit specifieke OSM-punt blijft een onderbouwde gevolgtrekking op basis van hetzelfde expliciete adres en de nabijheid; er is geen ingemeten of ter plaatse bevestigde relatie. De gemeentelijke beschrijving bevestigt gratis boodschappen en voedseldeling; specifieke openingstijden worden niet genoemd. Toestemming voor hergebruik is niet vastgesteld; link naar de officiële bronnen in plaats van de inhoud over te nemen.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/",
+      "additionalUrls": [
+        "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf"
+      ]
+    },
+    {
+      "sourceRecordId": "node/11476967720",
+      "status": "exact_address_current_official",
+      "note": "Gemeente Maashorst vermeldt momenteel een deelhuisje aan de Graspeel. De eigen krant van de gemeente noemt het exacte adres Graspeel 52, Zeeland. Het OSM-punt ligt volgens de opgeslagen BAG-zoekcontext op 15,25 meter van dit adres. De koppeling met dit specifieke OSM-punt blijft een onderbouwde gevolgtrekking op basis van hetzelfde expliciete adres en de nabijheid; er is geen ingemeten of ter plaatse bevestigde relatie. De gemeentelijke beschrijving bevestigt gratis boodschappen en voedseldeling; specifieke openingstijden worden niet genoemd. Toestemming voor hergebruik is niet vastgesteld; link naar de officiële bronnen in plaats van de inhoud over te nemen.",
+      "corroboratingUrl": "https://www.gemeentemaashorst.nl/inwoners/hulp-en-ondersteuning/geldzorgen/deelhuisjes/",
+      "additionalUrls": [
+        "https://www.gemeentemaashorst.nl/data/downloadables/4/4/1/3/zorgen-om-geld-krant.pdf"
+      ]
+    }
+  ]
+}

@@ -4,19 +4,25 @@ Een lokale, privacybewuste toepassing voor mensen die een **weggeefkastje** of b
 
 De bewonersvinder staat centraal: een buurtbewoner kan zonder account op een exact, gecontroleerd adres zoeken en zelf een route openen. De beheeromgeving en worker verzamelen alleen toegestane broninformatie, vergelijken die met de catalogus en verwerken wijzigingen met een controleerbare geschiedenis.
 
+De bewonerswebsite is ook een **installeerbare webapp (PWA)** voor telefoon en computer. Dezelfde catalogus is als lijst en als Google Maps-kaart beschikbaar, met filters voor het gebruikelijke aanbod. De Google-kaart vereist eigen configuratie; de lijst en rechtstreekse navigatielinks werken zonder Google API-sleutel.
+
 > **Belangrijke grens:** dit project bouwt geen algemene social-media-scraper. Het omzeilt geen inlog, captcha of platformbeperking, leest geen privéberichten en plaatst niets op Facebook of Nextdoor. Facebook kan uitsluitend via een expliciete Page-allowlist en de officiële Graph API worden gelezen. Nextdoor vereist een formeel toegestane export of later een geautoriseerde partnerkoppeling. Een ingelogde browser is nooit toestemming om gegevens te oogsten.
 
 ## In één oogopslag
 
 | Onderdeel | Wat het doet | Wat het bewust niet doet |
 | --- | --- | --- |
-| **/** | Gratis bewonersvinder met exacte, gecontroleerde adressen | Vraagt geen account of browserlocatie en toont geen bronbewijs of persoonsgegevens |
+| **/** | Mobiele website en installeerbare webapp met zoeken, aanbodfilters, lijst, optionele Google-kaart en routes | Vraagt geen account of browserlocatie; toont geen intern bronbewijs en belooft geen actuele voorraad |
 | **/kastje-bijwerken/:token** | Persoonlijke, tijdgebonden link waarmee de beheerder van één kastje gegevens kan bijwerken | Geeft geen toegang tot andere kastjes, bronnen of de beheeromgeving |
 | **/beheer** | Ingelogde beheeromgeving voor bronbeleid, catalogusreview, meldingen en beheerlinks | Is niet de openbare bewonerservaring |
 | **Worker** | Leest alleen geconfigureerde, toegestane bronnen en verwerkt die duurzaam | Geen browser-scraping, geen berichten plaatsen, geen automatische verwijdering op basis van één melding |
 | **SQLite** | Bewaart catalogus, bronregister, audittrail en bestaande handmatige workflow lokaal | Geen SaaS-account of externe databank nodig |
 
 De interface is Nederlands. Deze README is ook Nederlands, zodat bewonersgerichte beheerders en softwareontwikkelaars dezelfde bron van waarheid hebben.
+
+## Productie installeren
+
+De openbare HTTPS-installatie staat in **[docs/PRODUCTION.md](docs/PRODUCTION.md)**: releasecontrole, bestaande catalogus behouden, veilige initialisatie, Caddy/HTTPS, app/worker, automatische gecontroleerde back-ups, monitoring en rollback. Gebruik daarvoor `compose.production.yml` met `.env.production`; `docker-compose.yml` is de lokale ontwikkelvariant. Een lokale build/test is geen bewijs van een werkende live deployment of geautoriseerde providerkoppeling.
 
 ## Voor wie is dit?
 
@@ -82,6 +88,45 @@ Een eigenaarwijziging loopt opnieuw door de PDOK-adrescontrole. De eigenaar kan 
 
 De persoonlijke beheerlink is een bearer token: behandel hem als een wachtwoord. Het token wordt alleen als SHA-256-hash in SQLite bewaard. Het volledige token wordt slechts bij het uitgeven teruggegeven, is standaard 180 dagen geldig (1–365 dagen mogelijk), en een nieuwe link trekt eerdere actieve links voor dat kastje in.
 
+## Website, app en Google Maps
+
+### Voor bewoners
+
+- Zoek op plaats, postcode, straat of kastnaam. Bekijk resultaten als lijst of kaart; de selectie blijft in de URL staan en de terugknop herstelt eerdere filters.
+- Filter op **Boeken, Houdbare producten, Kleding, Koelkast, Overig, Speelgoed, Persoonlijke Hygiëne, Planten** of **Aanbod niet bekend**. Meerdere keuzes betekenen: een kastje past bij ten minste één gekozen categorie. Een lege categorie-selectie toont alle soorten.
+- Kies via **Meer filters** een provincie en sorteer op plaats/adres of recent gecontroleerd. Alleen actieve, gepubliceerde kastjes verschijnen, ook op de kaart en in exports.
+- Categorieën beschrijven wat er **doorgaans** wordt gedeeld. Er is geen live voorraadregistratie, geen openingstijdgarantie, geen filter ‘nu open’ en geen gegarandeerde productbeschikbaarheid.
+- Open vanuit een kastje de route in Google Maps. Daar kiest de bewoner zelf het vertrekpunt en vervoermiddel. De website vraagt geen apparaatlocatie op.
+- Zet de website op je beginscherm: via de aangeboden installatieknop in ondersteunde browsers, via Safari → Deel → Zet op beginscherm op iOS, of via het browsermenu op Android. De app opent direct de kaartselectie. De kaart wordt pas na een bewuste klik van Google geladen.
+- Voor zoeken en kaarten blijft internet nodig. Offline toont de app een herverbindingspagina, geen verouderde catalogus. Beheerlinks en API-antwoorden worden niet door de service worker opgeslagen.
+
+### Wat ‘overlay op Google Maps’ hier betekent
+
+De webapp legt openbare kastjes als selecteerbare spelden op de officiële Google Maps-basiskaart. Een selectie toont adres, gebruikelijk aanbod, verificatiedatum en navigatie. Dit is **geen extensie die zichzelf in de gewone Google Maps-app installeert**, en geen App Store-/Play Store-publicatie.
+
+Voor gebruik binnen Googles bestaande kaartomgeving kun je de gefilterde selectie als **KML** downloaden en op een computer importeren in **Google My Maps**. De export bevat uitsluitend publieke gegevens, bronvermeldingen en een exportdatum. Het is een **momentopname**; opnieuw importeren is handmatig, er is geen automatische My Maps-synchronisatie of Google-accountkoppeling. Zie [Google: bestanden importeren in My Maps](https://support.google.com/mymaps/answer/3024836?hl=en).
+
+De interactieve kaart toont maximaal 2.000 locaties tegelijk en meldt expliciet wanneer de selectie groter is. Verfijn dan op plaats, provincie of aanbod. Een export boven 2.000 locaties of 5 MB wordt geweigerd, niet stil afgekapt. De lijst blijft gepagineerd doorzoekbaar.
+
+### Google Maps activeren
+
+1. Maak of selecteer zelf een Google Cloud-project, activeer **Maps JavaScript API** en koppel facturering. Dit kan kosten meebrengen; de toepassing maakt geen project aan en activeert geen betaling.
+2. Maak een browser-API-sleutel. Beperk hem tot de exacte toegestane website-origins en uitsluitend Maps JavaScript API. Gebruik een aparte beperkte sleutel voor localhost-tests.
+3. Maak een **JavaScript map ID** voor Advanced Markers. Vul in de repository-root `.env` in:
+
+       VITE_GOOGLE_MAPS_API_KEY=je_beperkte_browser_api_sleutel
+       VITE_GOOGLE_MAPS_MAP_ID=je_javascript_map_id
+
+4. Herstart de ontwikkelserver of voer `npm run build` uit en herstart de productieserver. `VITE_`-waarden komen in het publieke browserbestand: gebruik hier **nooit** servergeheimen of provider-tokens.
+5. Open de bewonerswebsite → Kaart → Google Maps openen. Controleer de kaart, een speld, filters, route, consolemeldingen en de sleutelbeperkingen op het werkelijke publicatiedomein.
+6. Stel quota, budgetmeldingen en bewaking in bij Google. Een budgetmelding is op zichzelf geen harde kostenstop. Zonder geldige sleutel, map ID of Google-toegang blijft de lijst bruikbaar en toont de kaart een duidelijke beperking.
+
+Bij Docker worden deze twee publieke waarden als build-argumenten doorgegeven; `docker compose build app` leest ze uit de root `.env`. Alleen runtime-variabelen wijzigen is onvoldoende. Voor installatie op een telefoon is een stabiele **HTTPS**-website nodig; localhost is alleen een ontwikkeluitzondering. Zie [Google: API instellen](https://developers.google.com/maps/documentation/javascript/get-api-key) en [Advanced Markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/overview).
+
+### Privacy en visuele vormgeving
+
+Google Maps wordt niet op de achtergrond vooraf geladen. De knop legt uit dat openen een verbinding met Google maakt; de kaart gebruikt geen heimelijke apparaatlocatie. De openbare pagina heeft hiervoor een beperkte Google CSP-allowlist; beheer- en persoonlijke tokenpagina’s behouden de strengere standaard. Bronvermelding blijft zichtbaar onder **Bronnen & privacy** en in de KML-export. De buurtkast-illustratie is gegenereerd ter uitleg en is geen foto of bewijs van een bestaande locatie.
+
 ## Toegestane bronnen en social media
 
 Een bron werkt pas als **beide** kanten zijn ingericht:
@@ -118,7 +163,7 @@ De OSM-adapter is een optionele, begrensde pilot. Gebruik alleen een HTTPS Overp
 
 ### Vereisten
 
-- Node.js **>=20 <26**
+- Node.js **>=22 <26** (Node 24 LTS voor productie)
 - npm met het meegeleverde **package-lock.json**
 - Windows PowerShell voor de Windows-hulpscripts
 - Alleen voor Docker: Docker Desktop
@@ -188,12 +233,16 @@ Kopieer **.env.example**; commit nooit **.env**, echte exports of productiedatab
 | **RATE_LIMIT_PER_MINUTE** | 120 | Limiet voor API-verzoeken; openbare routes hebben ook een eigen begrenzing |
 | **TRUST_PROXY** | false | Alleen inschakelen achter een vertrouwde proxy |
 | **ALLOW_NETWORK_BINDING** | false | Vereist om buiten loopback te binden |
-| **ALLOW_REMOTE_SETUP** | false | Eerste setup is standaard alleen lokaal toegestaan |
-| **COOKIE_SECURE** | afgeleid | Voor productienetwerkbinding hoort dit true te zijn |
-| **APP_BASE_URL** | leeg | Optionele HTTPS-basis-URL voor volledige beheerlinks; zonder waarde wordt een relatieve link teruggegeven |
+| **ALLOW_REMOTE_SETUP** | false | Development: eerste setup standaard alleen lokaal; productie: web-setup altijd gesloten, gebruik CLI |
+| **COOKIE_SECURE** | afgeleid | In productie verplicht true, ook bij loopback/proxy; vereist HTTPS APP_BASE_URL |
+| **APP_BASE_URL** | leeg | Optioneel in development, verplicht HTTPS-origin in productie; volledige beheerlinks gebruiken dit domein |
 | **PUBLIC_WORKSPACE_ID** | leeg | UUID van de publieke werkruimte. Zonder deze instelling werkt de bewonersvinder alleen wanneer precies één werkruimte bestaat |
+| **WORKER_POLL_MS** | 5000 | Wachttijd als er geen taak gereed is |
+| **WORKER_JOB_LEASE_MS** | 300000 | Hersteltermijn voor vastgelopen taken; actieve taken vernieuwen hun lease |
+| **BACKUP_INTERVAL_HOURS** | 24 | Interval van de aparte back-upservice; 1–168 uur |
+| **BACKUP_KEEP_COUNT** | 14 | Aantal eigen gecontroleerde snapshots; 2–365; handmatige/recoverybestanden blijven behouden |
 
-Bij productienetwerkbinding vereist de configuratie een HTTPS **APP_BASE_URL** en veilige cookies. Dit voorkomt dat een toevallig openbare lokale installatie onveilig wordt.
+In productie vereist de configuratie altijd een HTTPS **APP_BASE_URL** en veilige cookies, ook bij een localhost-proxy. De bootstrap gebeurt via `node dist/cli.js bootstrap` met JSON op stdin; zie de productiehandleiding.
 
 ### Exacte adrescontrole
 
@@ -222,7 +271,7 @@ De innamebestanden worden lokaal gelezen. Een JSONL-record voor Nextdoor bevat t
 
 ## Bronnen veilig activeren
 
-1. Maak een lokale eigenaar aan via **/beheer**.
+1. Maak in development een lokale eigenaar aan via **/beheer**, of gebruik in productie de veilige CLI-bootstrap uit de productiehandleiding. Bestaande gebruikers/catalogus worden bij overdracht behouden.
 2. Zet alleen de technische variabelen voor een bron die echt is toegestaan.
 3. Open **Bronnen** en voeg de bron toe met de exacte sleutel uit de tabel hierboven.
 4. Vul toegangsvorm, korte toestemming-/licentiereferentie en de publiek vereiste naamsvermelding in.
@@ -234,17 +283,21 @@ De worker plant dagelijkse, idempotente jobs voor geconfigureerde invoer. Een ve
 
 ## API-overzicht
 
-Alle API-antwoorden hebben de vorm **{ data: ... }**. Product-API’s gebruiken cookie-sessies en bij mutaties een CSRF-header. Details, validatiefouten en request-ID’s staan bij fouten onder **error**.
+JSON-API-antwoorden hebben de vorm **{ data: ... }**; de KML-export is een XML-download. Beheer-API’s gebruiken cookie-sessies en bij mutaties een CSRF-header. Details, validatiefouten en request-ID’s staan bij fouten onder **error**.
 
 ### Openbare routes
 
 | Methode | Route | Resultaat |
 | --- | --- | --- |
 | GET | **/api/public/locations?query=&page=&limit=** | Alleen actieve én gepubliceerde locaties, zonder bewijs- of bronlink |
+| GET | **/api/public/map** | Dezelfde filters, maximaal 2.000 publieke locaties; `total` en `truncated` maken onvolledige dekking expliciet |
+| GET | **/api/public/locations.kml** | Gefilterde publieke My Maps-download; HTTP 422 bij meer dan 2.000 locaties of 5 MB |
 | GET | **/api/public/locations/:id** | Eén zichtbare locatie |
 | GET | **/api/public/attributions** | Alleen naam en naamsvermelding van bronnen die zichtbare locaties onderbouwen |
 | POST | **/api/public/locations/:id/reports** | Neemt een korte foutmelding aan en maakt een intern wijzigingsverzoek; verwijdert niets |
 | GET / POST | **/api/public/caretaker/:token** | Leest of wijzigt uitsluitend het tokengebonden kastje; POST verifieert het adres opnieuw |
+
+De drie lijst/kaart/export-routes delen `query` (maximaal 240 tekens), herhaalbare `category` (de genoemde categorieën of `unknown`), `province` (een van de 12 provincies; Friesland heet `Fryslân`) en `sort=address|recent`. De lijst accepteert daarnaast `page` (1–100000) en `limit` (1–100; standaard 25). De website gebruikt 12 resultaten per pagina. Ongeldige filterwaarden geven HTTP 400. Voorbeeld: `/api/public/locations?query=Utrecht&category=Boeken&category=Planten`.
 
 ### Beheerroutes
 
@@ -359,7 +412,8 @@ Voor elke wijziging aan privacy, bronbeleid, migraties, publieke API of provider
 
 - De code en tests valideren de toegestane route, maar er is **geen** live Facebook-token, Nextdoor-partnerschap, private-groepstoestemming, Overpass-endpoint of productie-PDOK-run meegeleverd of geclaimd.
 - Een Nederland-brede uitrol vereist per bron een rechtmatige toestemming/licentie en een gefaseerde kwaliteitscontrole. OSM staat bewust als begrensde pilot in de configuratie.
-- De bewonersvinder heeft nog geen kaartweergave, account voor bewoners, e-mail/push, uploads, geautomatiseerde berichten of betalingsfunctie. Die functies zijn niet nodig voor de huidige veilige kern en mogen niet worden verondersteld.
+- De kaartintegratie is geïmplementeerd maar vereist een eigen beperkte Google API-sleutel, map ID, facturering en live operatorcontrole. Er is geen native appwinkel-app, bewonersaccount, e-mail/push, uploadfunctie, automatische My Maps-synchronisatie, geautomatiseerd bericht of betaalfunctie.
+- Een installatie bevat niet vanzelf een gevulde landelijke catalogus. Rond werkruimte-setup, migraties, rechtmatige bronactivering en inname af voordat je dekking belooft. Testfixtures zijn geen openbare locaties.
 - Het product kent geen automatische “gevonden via social media = waarheid”-regel. Maximale dekking is ondergeschikt aan een betrouwbaar exact adres, privacy en buurtvertrouwen.
 
 ## Verdere documentatie
@@ -369,6 +423,10 @@ Voor elke wijziging aan privacy, bronbeleid, migraties, publieke API of provider
 | [docs/COMPLIANCE_AND_PRIVACY.md](docs/COMPLIANCE_AND_PRIVACY.md) | Toestemming, minimale gegevens en publicatieregels |
 | [docs/OPERATOR_RUNBOOK.md](docs/OPERATOR_RUNBOOK.md) | Dagelijks beheer, bronactivering, back-up en incidenten |
 | [docs/ACCEPTANCE_TESTS.md](docs/ACCEPTANCE_TESTS.md) | Toetsbare product- en veiligheidscriteria |
+| [docs/WEBSITE_APP_ACCEPTANCE.md](docs/WEBSITE_APP_ACCEPTANCE.md) | Website/PWA-verificatie, kaartgrenzen en nog benodigde live acceptatie |
+| [docs/DISCOVERY_IMPORT_2026-09-05.md](docs/DISCOVERY_IMPORT_2026-09-05.md) | Werkelijke lokale internetimport: 86 locaties, 1.864 kandidaten, bronrechten, dekking en herstel |
+| [docs/DISCOVERY_VERIFICATION_2026-09-05.md](docs/DISCOVERY_VERIFICATION_2026-09-05.md) | Eerste verificatieronde: twee adrescorrecties, 88 publieke locaties en resterende onzekerheden |
+| [docs/VERIFICATION_WORKFLOW.md](docs/VERIFICATION_WORKFLOW.md) | Vondsten onderzoeken in het beheer: zoeken, paginering, bronbewijs, ontbrekende controles, notitiehistorie en veilige import |
 | [docs/SECURITY.md](docs/SECURITY.md) | Dreigingsmodel, controles en restrisico |
 | [docs/WINDOWS_AND_NGROK.md](docs/WINDOWS_AND_NGROK.md) | Windows- en tunneldeployment |
 | [docs/HAI_INTEGRATION.md](docs/HAI_INTEGRATION.md) | Read-only HAI-feed |
