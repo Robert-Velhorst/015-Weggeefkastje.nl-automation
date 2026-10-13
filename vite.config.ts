@@ -5,6 +5,7 @@ const apiPort = process.env.API_PORT ?? '3000';
 
 export default defineConfig({
   root: 'web',
+  envDir: '..',
   plugins: [react()],
   server: {
     host: '127.0.0.1',

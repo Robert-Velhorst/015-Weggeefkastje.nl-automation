@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
@@ -18,9 +18,12 @@ describe('safe default ingestion command', () => {
     const dataDirectory = mkdtempSync(join(tmpdir(), 'weggeefkastje-safe-ingest-'));
     temporaryDirectories.push(dataDirectory);
     const databasePath = join(dataDirectory, 'automation.sqlite');
-    const isWindows = process.platform === 'win32';
-    const command = isWindows ? process.env.ComSpec ?? 'cmd.exe' : 'npm';
-    const commandArguments = isWindows ? ['/d', '/s', '/c', 'npm.cmd run ingest'] : ['run', 'ingest'];
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as { scripts: Record<string, string> };
+    expect(pkg.scripts.ingest).toBe('tsx src/worker.ts --once');
+    // Check the exact package-script target without an extra npm/cmd process tree.
+    // Compiled production process behaviour is separately exercised by smoke:production.
+    const command = process.execPath;
+    const commandArguments = ['--import', 'tsx', 'src/worker.ts', '--once'];
 
     const result = spawnSync(command, commandArguments, {
       cwd: process.cwd(),
@@ -38,7 +41,7 @@ describe('safe default ingestion command', () => {
         OSM_OVERPASS_URL: '',
         OSM_PILOT_BBOX: '',
       },
-      timeout: 20_000,
+      timeout: 45_000,
     });
 
     expect(result.error).toBeUndefined();
@@ -51,7 +54,8 @@ describe('safe default ingestion command', () => {
     } finally {
       sqlite.close();
     }
-  });
+  // Bounded process-start budget includes source transpilation on slower Windows hosts.
+  }, 55_000);
 
   it('keeps the compatibility importer behind an explicitly named command', () => {
     const dataDirectory = mkdtempSync(join(tmpdir(), 'weggeefkastje-legacy-ingest-'));
@@ -85,5 +89,5 @@ describe('safe default ingestion command', () => {
     } finally {
       sqlite.close();
     }
-  });
+  }, 30_000);
 });

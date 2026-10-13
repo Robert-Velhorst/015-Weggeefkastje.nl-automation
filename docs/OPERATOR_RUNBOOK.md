@@ -23,6 +23,15 @@ This runbook is for the person or small team that operates the resident finder, 
 
 Do not expose first setup through ngrok, a reverse proxy or a public network. A network deployment requires a stable HTTPS base URL, secure cookies and explicit network-binding configuration.
 
+## Website and app release check
+
+1. Follow the **Website, app en Google Maps** section of the root README for Google project, restricted browser key, JavaScript map ID and build-time configuration. No Google billing or publishing is automated.
+2. Use HTTPS for the real phone install path. Build and restart after changing `VITE_GOOGLE_MAPS_API_KEY` or `VITE_GOOGLE_MAPS_MAP_ID`; runtime-only changes do not update browser assets.
+3. Verify the resident homepage, owner link and existing `/beheer` route. Verify search, multi-category OR selection, province, sort, pagination, browser back, empty results, error recovery and direct navigation.
+4. With an operator-owned test key, open the map only after the consent button; inspect pins and selection on desktop and mobile. Test provider refusal and the list fallback. A mocked SDK test is not Google production acceptance.
+5. Export a bounded filtered KML, inspect public fields/attributions, and manually import into a private test My Maps map only when authorized. Exports are snapshots and are never auto-published or auto-synchronized.
+6. Test installation on supported phone browsers, offline fallback and reconnection. No API data or caretaker route may appear in the service worker cache. Keep the static offline assets and service worker fresh across deployments.
+
 ## Daily routine
 
 1. Check **/ready** and worker logs.
@@ -148,9 +157,11 @@ Create a checksum:
 
 Restore only after stopping server and worker:
 
-    npm run cli -- restore --from data/backups/<file>.sqlite --confirm
+    npm run cli -- restore --from data/backups/<file>.sqlite --confirm --confirm-services-stopped
 
-The restore command makes a recovery copy and verifies the reopened database. Preserve the printed recovery path until the restored instance has been accepted. Test backup/restore on non-production data before relying on it.
+Stop the backup service as well. Restore validates the input, checksum (when present) and migrated staging copy before touching the target. It creates an online recovery backup and preserves the replaced database files. Keep both until operator acceptance. This command cannot prove that every external process has stopped: the offline confirmation is an operator responsibility.
+
+For public deployment, use [PRODUCTION.md](PRODUCTION.md). The default `docker-compose.yml` is for local development, not the public HTTPS installation.
 
 ## Release checklist
 

@@ -150,6 +150,7 @@ export interface ResidentLocationEvent {
 }
 
 export interface LocationUpdateRequest {
+  verificationNotes?: import('./verificationNote.js').VerificationNote[];
   id: string;
   workspaceId: string;
   locationId?: string;

@@ -197,14 +197,14 @@ export async function fetchFacebookPageMentions(options: FacebookGraphOptions): 
     endpoint.searchParams.set('access_token', options.accessToken);
 
     for (let pageNumber = 0; endpoint && pageNumber < maxPages; pageNumber += 1) {
-      const response = await fetchImpl(endpoint);
+      const response = await fetchImpl(endpoint, { signal: AbortSignal.timeout(15_000), redirect: 'error' });
       if (!response.ok) throw new Error(`Facebook Graph request for page ${page.id} failed with ${response.status}.`);
       const body = await response.text();
       batches.push(parseFacebookGraphPosts(body, page));
       const parsed = JSON.parse(body) as { paging?: { next?: string } };
       if (!parsed.paging?.next) break;
       const next = new URL(parsed.paging.next);
-      if (next.protocol !== 'https:' || next.hostname !== 'graph.facebook.com') throw new Error('Facebook paging URL was rejected.');
+      if (next.protocol !== 'https:' || next.hostname !== 'graph.facebook.com' || next.username || next.password || (next.port && next.port !== '443')) throw new Error('Facebook paging URL was rejected.');
       endpoint = next;
     }
   }

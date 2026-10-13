@@ -452,6 +452,34 @@ const migrations: Migration[] = [
       db.exec('ALTER TABLE location_update_requests ADD COLUMN resolved_by TEXT;');
     },
   },
+  {
+    version: 7,
+    name: 'location_request_verification_history',
+    up(db) {
+      db.exec(`
+        CREATE TABLE location_verification_notes (
+          sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+          id TEXT NOT NULL UNIQUE,
+          workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+          location_request_id TEXT NOT NULL REFERENCES location_update_requests(id) ON DELETE CASCADE,
+          actor_user_id TEXT NOT NULL REFERENCES users(id),
+          content_json TEXT NOT NULL,
+          content_hash TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE(workspace_id, location_request_id, content_hash)
+        );
+        CREATE INDEX idx_verification_request ON location_verification_notes(workspace_id, location_request_id, sequence DESC);
+      `);
+    },
+  },
+  {
+    version: 8,
+    name: 'recoverable_worker_leases',
+    up(db) {
+      db.exec(`ALTER TABLE jobs ADD COLUMN lease_token TEXT;
+        CREATE INDEX idx_jobs_leases ON jobs(status, locked_at);`);
+    },
+  },
 ];
 
 export function runMigrations(db: Database.Database): { applied: number[]; currentVersion: number } {
@@ -463,6 +491,9 @@ export function runMigrations(db: Database.Database): { applied: number[]; curre
     );
   `);
   const existing = new Set((db.prepare('SELECT version FROM schema_migrations').all() as Array<{ version: number }>).map((row) => row.version));
+  if ([...existing].some(version => version > (migrations.at(-1)?.version ?? 0))) {
+    throw new Error('Database schema is newer than this release. Restore the matching backup before rolling back.');
+  }
   const applied: number[] = [];
 
   for (const migration of migrations) {

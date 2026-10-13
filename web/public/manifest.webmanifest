@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Weggeefkastje — Vind een kastje",
+  "short_name": "Weggeefkastje",
+  "description": "Buurtkastjes vinden op adres en gebruikelijk aanbod.",
+  "lang": "nl-NL",
+  "start_url": "/?view=map",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e8f2fa",
+  "theme_color": "#193b59",
+  "categories": ["lifestyle", "navigation"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [{ "name": "Zoek een kastje", "url": "/#kastjes", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }]
+}

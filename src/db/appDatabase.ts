@@ -28,6 +28,7 @@ import {
 } from '../domain/residentLocation.js';
 import { normaliseKey } from '../core/normalise.js';
 import { migrationStatus, runMigrations } from './migrations.js';
+import { verificationNoteSchema, verificationQueueSchema, type VerificationNote, type VerificationNoteInput } from '../domain/verificationNote.js';
 
 export interface SessionContext {
   sessionId: string;
@@ -101,6 +102,7 @@ export interface CreateExchangeItemInput {
 }
 
 export interface JobRecord {
+  leaseToken?: string;
   id: string;
   workspaceId?: string;
   jobType: string;
@@ -123,6 +125,9 @@ export interface AmbiguousSocialMentionInput {
 
 export interface ResidentLocationListRequest {
   query?: string;
+  category?: string[];
+  province?: string;
+  sort?: 'address' | 'recent';
   page?: number;
   limit?: number;
   includeReview?: boolean;
@@ -310,10 +315,16 @@ export class AppDatabase {
   constructor(path: string) {
     mkdirSync(dirname(path), { recursive: true });
     this.db = new Database(path);
-    this.db.pragma('foreign_keys = ON');
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('busy_timeout = 5000');
-    this.migrationResult = runMigrations(this.db);
+    try {
+      this.db.pragma('foreign_keys = ON');
+      this.db.pragma('journal_mode = WAL');
+      this.db.pragma('synchronous = FULL');
+      this.db.pragma('busy_timeout = 5000');
+      this.migrationResult = runMigrations(this.db);
+    } catch (error) {
+      this.db.close();
+      throw error;
+    }
   }
 
   close(): void {
@@ -793,9 +804,9 @@ export class AppDatabase {
     return { items: rows.map(mapResidentLocation), total, page, limit };
   }
 
-  listPublicResidentLocations(workspaceId: string, request: Omit<ResidentLocationListRequest, 'includeReview'> = {}): ResidentLocationListResult {
+  listPublicResidentLocations(workspaceId: string, request: Omit<ResidentLocationListRequest, 'includeReview'> = {}, maxLimit = 100): ResidentLocationListResult {
     const page = Math.max(1, request.page ?? 1);
-    const limit = Math.min(100, Math.max(1, request.limit ?? 25));
+    const limit = Math.min(maxLimit, Math.max(1, request.limit ?? 25));
     const clauses = ["workspace_id = ?", "publication_status = 'published'", "status = 'active'"];
     const parameters: unknown[] = [workspaceId];
     if (request.query?.trim()) {
@@ -803,9 +814,24 @@ export class AppDatabase {
       clauses.push("(title LIKE ? ESCAPE '\\' OR address_line LIKE ? ESCAPE '\\' OR postal_code LIKE ? ESCAPE '\\' OR city LIKE ? ESCAPE '\\')");
       parameters.push(query, query, query, query);
     }
+    if (request.category?.length) {
+      const categories = request.category.filter((category) => category !== 'unknown');
+      const categoryClauses: string[] = [];
+      if (categories.length) {
+        categoryClauses.push(`EXISTS (SELECT 1 FROM json_each(categories_json) WHERE value IN (${categories.map(() => '?').join(',')}))`);
+        parameters.push(...categories);
+      }
+      if (request.category.includes('unknown')) categoryClauses.push('json_array_length(categories_json) = 0');
+      clauses.push(`(${categoryClauses.join(' OR ')})`);
+    }
+    if (request.province) {
+      clauses.push('province = ?');
+      parameters.push(request.province);
+    }
     const where = clauses.join(' AND ');
     const total = (this.db.prepare(`SELECT COUNT(*) AS count FROM resident_locations WHERE ${where}`).get(...parameters) as { count: number }).count;
-    const rows = this.db.prepare(`SELECT * FROM resident_locations WHERE ${where} ORDER BY city COLLATE NOCASE, address_line COLLATE NOCASE, id LIMIT ? OFFSET ?`)
+    const order = request.sort === 'recent' ? 'last_verified_at DESC, id' : 'city COLLATE NOCASE, address_line COLLATE NOCASE, id';
+    const rows = this.db.prepare(`SELECT * FROM resident_locations WHERE ${where} ORDER BY ${order} LIMIT ? OFFSET ?`)
       .all(...parameters, limit, (page - 1) * limit) as any[];
     return { items: rows.map(mapResidentLocation), total, page, limit };
   }
@@ -893,11 +919,45 @@ export class AppDatabase {
     return row ? mapLocationUpdateRequest(row) : undefined;
   }
 
-  listLocationUpdateRequests(workspaceId: string, status: LocationUpdateRequest['status'] = 'pending'): { items: LocationUpdateRequest[]; total: number } {
-    const rows = this.db.prepare('SELECT * FROM location_update_requests WHERE workspace_id = ? AND status = ? ORDER BY created_at DESC, id DESC LIMIT 100')
-      .all(workspaceId, status) as any[];
-    const total = (this.db.prepare('SELECT COUNT(*) AS count FROM location_update_requests WHERE workspace_id = ? AND status = ?').get(workspaceId, status) as { count: number }).count;
-    return { items: rows.map(mapLocationUpdateRequest), total };
+  listLocationUpdateRequests(workspaceId: string, status: LocationUpdateRequest['status'] = 'pending', options: { page?: number; limit?: number; query?: string; researched?: 'all' | 'yes' | 'no' } = {}): { items: LocationUpdateRequest[]; total: number; page: number; limit: number } {
+    const { page, limit, query, researched } = verificationQueueSchema.parse(options);
+    const hasNotes = 'EXISTS (SELECT 1 FROM location_verification_notes n WHERE n.workspace_id=r.workspace_id AND n.location_request_id=r.id)';
+    const clauses = ['r.workspace_id=?', 'r.status=?'];
+    const params: (string | number)[] = [workspaceId, status];
+    if (researched !== 'all') clauses.push(researched === 'yes' ? hasNotes : `NOT ${hasNotes}`);
+    if (query) {
+      clauses.push(`(instr(lower(r.candidate_json || ' ' || r.reason), lower(?)) > 0 OR EXISTS (SELECT 1 FROM location_verification_notes n WHERE n.workspace_id=r.workspace_id AND n.location_request_id=r.id AND instr(lower(n.content_json), lower(?)) > 0))`);
+      params.push(query, query);
+    }
+    const where = clauses.join(' AND ');
+    const total = (this.db.prepare(`SELECT COUNT(*) AS count FROM location_update_requests r WHERE ${where}`).get(...params) as { count: number }).count;
+    const rows = this.db.prepare(`SELECT r.* FROM location_update_requests r WHERE ${where} ORDER BY r.created_at DESC, r.id DESC LIMIT ? OFFSET ?`).all(...params, limit, (page - 1) * limit) as any[];
+    const notes = new Map<string, VerificationNote[]>();
+    if (rows.length) {
+      const values = this.db.prepare(`SELECT * FROM location_verification_notes WHERE workspace_id=? AND location_request_id IN (${rows.map(() => '?').join(',')}) ORDER BY sequence DESC`).all(workspaceId, ...rows.map(row => row.id)) as any[];
+      for (const row of values) {
+        const list = notes.get(row.location_request_id) ?? [];
+        list.push({ ...JSON.parse(row.content_json), id: row.id, createdAt: row.created_at }); notes.set(row.location_request_id, list);
+      }
+    }
+    return { items: rows.map(row => ({ ...mapLocationUpdateRequest(row), verificationNotes: notes.get(row.id) ?? [] })), total, page, limit };
+  }
+
+  addLocationVerificationNote(workspaceId: string, actorUserId: string, id: string, input: VerificationNoteInput, requestId?: string): VerificationNote | undefined {
+    if (!this.getLocationUpdateRequest(workspaceId, id)) return undefined;
+    const membership = this.db.prepare('SELECT role FROM workspace_members WHERE workspace_id=? AND user_id=?').get(workspaceId, actorUserId) as { role: string } | undefined;
+    if (!membership || !['owner', 'operator'].includes(membership.role)) throw new Error('Verification notes not allowed for this user.');
+    const parsed = verificationNoteSchema.parse(input);
+    const content = JSON.stringify(parsed);
+    const hash = createHash('sha256').update(content).digest('hex');
+    const existing = this.db.prepare('SELECT id, created_at FROM location_verification_notes WHERE workspace_id=? AND location_request_id=? AND content_hash=?').get(workspaceId, id, hash) as any;
+    if (existing) return { ...parsed, id: existing.id, createdAt: existing.created_at };
+    const noteId = randomUUID(); const now = new Date().toISOString();
+    this.db.transaction(() => {
+      this.db.prepare('INSERT INTO location_verification_notes (id,workspace_id,location_request_id,actor_user_id,content_json,content_hash,created_at) VALUES (?,?,?,?,?,?,?)').run(noteId, workspaceId, id, actorUserId, content, hash, now);
+      this.audit({ workspaceId, actorUserId, action: 'resident_request.verification_noted', resourceType: 'location_update_request', resourceId: id, requestId, details: { noteId, outcome: parsed.outcome } });
+    })();
+    return { ...parsed, id: noteId, createdAt: now };
   }
 
   resolveLocationUpdateRequest(
@@ -1138,29 +1198,40 @@ export class AppDatabase {
     return this.getJobByKey(input.idempotencyKey)!;
   }
 
-  claimNextJob(): JobRecord | undefined {
+  claimNextJob(leaseMs = 300_000, now = new Date()): JobRecord | undefined {
     return this.db.transaction(() => {
-      const row = this.db.prepare("SELECT * FROM jobs WHERE status = 'queued' AND run_after <= ? ORDER BY run_after, created_at LIMIT 1").get(new Date().toISOString()) as any | undefined;
+      const stamp = now.toISOString();
+      const expired = new Date(now.getTime() - leaseMs).toISOString();
+      this.db.prepare(`UPDATE jobs SET status = CASE WHEN attempts < max_attempts THEN 'queued' ELSE 'failed' END,
+        run_after = ?, locked_at = NULL, lease_token = NULL, last_error = 'Worker lease expired',
+        finished_at = CASE WHEN attempts >= max_attempts THEN ? ELSE NULL END, updated_at = ?
+        WHERE status = 'running' AND (locked_at IS NULL OR locked_at <= ?)`)
+        .run(stamp, stamp, stamp, expired);
+      const row = this.db.prepare("SELECT * FROM jobs WHERE status = 'queued' AND run_after <= ? ORDER BY run_after, created_at, id LIMIT 1").get(stamp) as any | undefined;
       if (!row) return undefined;
-      const now = new Date().toISOString();
-      this.db.prepare("UPDATE jobs SET status = 'running', attempts = attempts + 1, locked_at = ?, updated_at = ? WHERE id = ? AND status = 'queued'").run(now, now, row.id);
+      this.db.prepare("UPDATE jobs SET status = 'running', attempts = attempts + 1, locked_at = ?, lease_token = ?, updated_at = ? WHERE id = ? AND status = 'queued'").run(stamp, randomUUID(), stamp, row.id);
       return this.getJob(row.id);
-    })();
+    }).immediate();
   }
 
-  completeJob(id: string): void {
+  renewJobLease(id: string, leaseToken: string): boolean {
+    return this.db.prepare("UPDATE jobs SET locked_at = ?, updated_at = ? WHERE id = ? AND status = 'running' AND lease_token = ?")
+      .run(new Date().toISOString(), new Date().toISOString(), id, leaseToken).changes === 1;
+  }
+
+  completeJob(id: string, leaseToken: string): boolean {
     const now = new Date().toISOString();
-    this.db.prepare("UPDATE jobs SET status = 'succeeded', finished_at = ?, locked_at = NULL, updated_at = ? WHERE id = ?").run(now, now, id);
+    return this.db.prepare("UPDATE jobs SET status = 'succeeded', finished_at = ?, locked_at = NULL, lease_token = NULL, updated_at = ? WHERE id = ? AND status = 'running' AND lease_token = ?").run(now, now, id, leaseToken).changes === 1;
   }
 
-  failJob(id: string, error: string): void {
+  failJob(id: string, error: string, leaseToken: string): void {
     const job = this.getJob(id);
-    if (!job) return;
+    if (!job || job.status !== 'running' || job.leaseToken !== leaseToken) return;
     const now = new Date();
     const retry = job.attempts < job.maxAttempts;
     const delayMinutes = Math.min(60, 2 ** job.attempts);
-    this.db.prepare('UPDATE jobs SET status = ?, run_after = ?, locked_at = NULL, last_error = ?, finished_at = ?, updated_at = ? WHERE id = ?')
-      .run(retry ? 'queued' : 'failed', new Date(now.getTime() + delayMinutes * 60_000).toISOString(), error.slice(0, 2000), retry ? null : now.toISOString(), now.toISOString(), id);
+    this.db.prepare("UPDATE jobs SET status = ?, run_after = ?, locked_at = NULL, lease_token = NULL, last_error = ?, finished_at = ?, updated_at = ? WHERE id = ? AND status = 'running' AND lease_token = ?")
+      .run(retry ? 'queued' : 'failed', new Date(now.getTime() + delayMinutes * 60_000).toISOString(), error.slice(0, 2000), retry ? null : now.toISOString(), now.toISOString(), id, leaseToken);
   }
 
   staleItems(workspaceId: string, days: number): number {
@@ -1275,6 +1346,7 @@ export class AppDatabase {
 
   private mapJob(row: any): JobRecord {
     return {
+      leaseToken: row.lease_token ?? undefined,
       id: row.id,
       workspaceId: row.workspace_id ?? undefined,
       jobType: row.job_type,

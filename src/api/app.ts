@@ -15,11 +15,16 @@ import {
   sourceRegistrationSchema,
   sourceUpdateSchema,
   type ResidentLocation,
+  type PublicResidentLocation,
 } from '../domain/residentLocation.js';
 import { buildHaiFeed, haiRequestAuthorized } from '../integrations/haiFeed.js';
 import { buildGoogleMapsDirectionsUrl } from '../app/navigation.js';
 import { createPdokAddressVerifier, type AddressVerifier } from '../integrations/pdokAddress.js';
 import { applyCaretakerChange } from '../services/residentCatalog.js';
+import { publicFiltersSchema } from '../app/publicFilters.js';
+import { buildPublicKml } from '../app/mapExport.js';
+import { verificationNoteSchema, verificationQueueSchema } from '../domain/verificationNote.js';
+import { setupSchema } from '../auth/setupInput.js';
 
 const SESSION_COOKIE = 'wk_session';
 
@@ -40,7 +45,7 @@ function parseCookies(header: string | undefined): Record<string, string> {
   if (!header) return {};
   return Object.fromEntries(header.split(';').map((part) => {
     const [name, ...rest] = part.trim().split('=');
-    return [name, decodeURIComponent(rest.join('='))];
+    try { return [name, decodeURIComponent(rest.join('='))]; } catch { return [name, '']; }
   }));
 }
 
@@ -86,13 +91,6 @@ function isLoopback(ip: string | undefined): boolean {
   return Boolean(ip && (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1'));
 }
 
-const setupSchema = z.object({
-  email: z.string().email().max(254),
-  password: z.string().min(12).max(200),
-  displayName: z.string().trim().min(2).max(120),
-  workspaceName: z.string().trim().min(2).max(120),
-});
-
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1).max(200) });
 const copySchema = z.object({ idempotencyKey: z.string().trim().min(8).max(120) });
 const safetyStopSchema = z.object({ enabled: z.boolean() });
@@ -103,7 +101,7 @@ export interface CreateAppDependencies {
   addressVerifier?: AddressVerifier;
 }
 
-function publicLocation(location: ResidentLocation): Record<string, unknown> {
+function publicLocation(location: ResidentLocation): PublicResidentLocation {
   return {
     id: location.id,
     title: location.title,
@@ -143,9 +141,18 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxy ? 1 : false);
-  app.use((_req, res, next) => {
+  app.use((req, res, next) => {
     res.locals.requestId = randomUUID();
     res.setHeader('x-request-id', res.locals.requestId);
+    if (config.mode === 'production') {
+      const started = performance.now();
+      res.on('finish', () => console.log(JSON.stringify({
+        event: 'http.request', requestId: res.locals.requestId, method: req.method,
+        // Route templates redact bearer tokens; never log raw URLs, query strings or bodies.
+        route: typeof req.route?.path === 'string' ? req.route.path : 'static_or_unmatched',
+        status: res.statusCode, durationMs: Math.round(performance.now() - started),
+      })));
+    }
     next();
   });
   app.use(helmet({
@@ -168,6 +175,7 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
     limit: config.rateLimitPerMinute,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
+    skip: req => req.path === '/health' || req.path === '/ready',
     message: { error: { code: 'RATE_LIMITED', message: 'Te veel verzoeken. Wacht even en probeer opnieuw.' } },
   }));
   app.use(compression({ threshold: 1024 }));
@@ -180,8 +188,11 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
   app.get('/health', (_req, res) => ok(res, { ok: true, service: 'weggeefkastje-automation', mode: config.mode }));
   app.get('/ready', (_req, res) => {
     const readiness = database.readiness();
-    const ready = readiness.ok && !readiness.setupRequired;
-    res.status(ready ? 200 : 503).json({ data: { ready, ...readiness } });
+    const webReady = config.mode !== 'production' || existsSync(join(config.webDistPath, 'index.html'));
+    const publicWorkspaceReady = Boolean(database.resolvePublicWorkspaceId(config.publicWorkspaceId));
+    const ready = readiness.ok && !readiness.setupRequired && webReady && publicWorkspaceReady;
+    res.setHeader('cache-control', 'no-store');
+    res.status(ready ? 200 : 503).json({ data: { ready, webReady, publicWorkspaceReady, ...readiness } });
   });
 
   const authLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false });
@@ -204,7 +215,7 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
   app.get('/api/setup/status', (_req, res) => ok(res, { setupRequired: !database.hasUsers(), demoMode: config.demoMode }));
   app.post('/api/setup', authLimiter, (req, res, next) => {
     try {
-      if (!config.allowRemoteSetup && !isLoopback(req.ip)) {
+      if (config.mode === 'production' || (!config.allowRemoteSetup && !isLoopback(req.ip))) {
         throw new ApiError(403, 'REMOTE_SETUP_DISABLED', 'Initial setup is alleen lokaal toegestaan. Rond de installatie af voordat je een tunnel opent.');
       }
       const input = setupSchema.parse(req.body);
@@ -262,17 +273,33 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
 
   app.get('/api/public/locations', publicLimiter, (req, res, next) => {
     try {
-      const result = database.listPublicResidentLocations(publicWorkspaceId(), {
-        query: typeof req.query.query === 'string' ? req.query.query : undefined,
-        page: Number(req.query.page ?? 1),
-        limit: Number(req.query.limit ?? 25),
-      });
+      const result = database.listPublicResidentLocations(publicWorkspaceId(), publicFiltersSchema.parse(req.query));
       ok(res, { items: result.items.map(publicLocation), total: result.total, page: result.page, limit: result.limit });
     } catch (error) { next(error); }
   });
   app.get('/api/public/attributions', publicLimiter, (_req, res, next) => {
     try {
       ok(res, database.listPublicResidentAttributions(publicWorkspaceId()));
+    } catch (error) { next(error); }
+  });
+  app.get('/api/public/map', publicLimiter, (req, res, next) => {
+    try {
+      const filters = publicFiltersSchema.parse(req.query);
+      const result = database.listPublicResidentLocations(publicWorkspaceId(), { ...filters, page: 1, limit: 2000 }, 2000);
+      ok(res, { items: result.items.map(publicLocation), total: result.total, truncated: result.total > result.items.length });
+    } catch (error) { next(error); }
+  });
+  app.get('/api/public/locations.kml', publicLimiter, (req, res, next) => {
+    try {
+      const filters = publicFiltersSchema.parse(req.query);
+      const workspaceId = publicWorkspaceId();
+      const result = database.listPublicResidentLocations(workspaceId, { ...filters, page: 1, limit: 2000 }, 2000);
+      if (result.total > 2000) throw new ApiError(422, 'EXPORT_TOO_LARGE', 'Kies een plaats, provincie of categorie zodat er maximaal 2.000 kastjes overblijven.');
+      const document = buildPublicKml(result.items.map(publicLocation), database.listPublicResidentAttributions(workspaceId));
+      if (Buffer.byteLength(document, 'utf8') > 5_000_000) throw new ApiError(422, 'EXPORT_TOO_LARGE', 'De kaart is te groot voor My Maps. Verfijn je filters.');
+      res.setHeader('content-type', 'application/vnd.google-earth.kml+xml; charset=utf-8');
+      res.setHeader('content-disposition', 'attachment; filename="weggeefkastjes.kml"');
+      res.send(document);
     } catch (error) { next(error); }
   });
   app.get('/api/public/locations/:id', publicLimiter, (req, res, next) => {
@@ -395,7 +422,17 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
     try {
       const status = typeof req.query.status === 'string' ? req.query.status : 'pending';
       if (!['pending', 'resolved', 'dismissed'].includes(status)) throw new ApiError(400, 'INVALID_STATUS', 'Ongeldige verzoekstatus.');
-      ok(res, database.listLocationUpdateRequests(session(res).workspaceId, status as 'pending' | 'resolved' | 'dismissed'));
+      const options = verificationQueueSchema.parse(req.query);
+      ok(res, database.listLocationUpdateRequests(session(res).workspaceId, status as 'pending' | 'resolved' | 'dismissed', options));
+    } catch (error) { next(error); }
+  });
+  app.post('/api/location-update-requests/:id/verification-notes', requireRole('owner', 'operator'), (req, res, next) => {
+    try {
+      const current = session(res);
+      const input = verificationNoteSchema.parse(req.body);
+      const result = database.addLocationVerificationNote(current.workspaceId, current.userId, String(req.params.id), input, res.locals.requestId);
+      if (!result) throw new ApiError(404, 'LOCATION_UPDATE_REQUEST_NOT_FOUND', 'Wijzigingsverzoek niet gevonden.');
+      ok(res, result, 201);
     } catch (error) { next(error); }
   });
   app.post('/api/location-update-requests/:id/resolve', requireRole('owner', 'operator'), (req, res, next) => {
@@ -514,14 +551,41 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
   }));
 
   if (existsSync(config.webDistPath)) {
-    app.use(express.static(config.webDistPath, { index: false, fallthrough: true, maxAge: config.mode === 'production' ? '1h' : 0 }));
-    app.get(/^(?!\/api|\/health|\/ready).*/, (_req, res) => res.sendFile(join(config.webDistPath, 'index.html')));
+    // Restricted Maps browser keys need the site origin, never the search or bearer-link URL.
+    app.get('/', helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
+    // Only the public document can load Maps. Admin and bearer-link pages keep the strict default CSP.
+    app.get('/', helmet.contentSecurityPolicy({ directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-eval'", 'https://*.googleapis.com', 'https://*.gstatic.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      imgSrc: ["'self'", 'data:', 'https://*.googleapis.com', 'https://*.gstatic.com', 'https://*.google.com', 'https://*.googleusercontent.com'],
+      connectSrc: ["'self'", 'https://*.googleapis.com', 'https://*.gstatic.com', 'https://*.google.com', 'data:', 'blob:'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      frameSrc: ['https://*.google.com'], workerSrc: ["'self'", 'blob:'],
+      objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'none'"],
+    } }));
+    app.use(express.static(config.webDistPath, {
+      index: false, fallthrough: true, setHeaders(res, path) {
+        const immutable = config.mode === 'production' && /[/\\]assets[/\\].+-[\w-]{8,}\.[\w]+$/.test(path);
+        res.setHeader('cache-control', immutable ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    }));
+    app.get(/^(?:\/|\/beheer(?:\/.*)?|\/kastje-bijwerken\/[^/]+)$/, (_req, res) => {
+      res.setHeader('cache-control', 'no-store');
+      res.sendFile(join(config.webDistPath, 'index.html'));
+    });
   }
 
   app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Route niet gevonden.')));
   app.use((error: unknown, _req: Request, res: Response, next: NextFunction) => {
     void next;
     const requestId = res.locals.requestId;
+    const bodyError = error as { type?: string } | undefined;
+    if (bodyError?.type === 'entity.parse.failed' || bodyError?.type === 'entity.too.large') {
+      const tooLarge = bodyError.type === 'entity.too.large';
+      res.status(tooLarge ? 413 : 400).json({ error: { code: tooLarge ? 'BODY_TOO_LARGE' : 'INVALID_JSON', message: tooLarge ? 'Het verzoek is te groot.' : 'Ongeldige JSON.', requestId } });
+      return;
+    }
     if (error instanceof ApiError) {
       res.status(error.status).json({ error: { code: error.code, message: error.message, details: error.details, requestId } });
       return;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import request from 'supertest';
@@ -18,6 +18,8 @@ afterEach(() => {
 function harness() {
   const directory = mkdtempSync(join(tmpdir(), 'weggeef-public-api-'));
   directories.push(directory);
+  mkdirSync(join(directory, 'dist-web'));
+  writeFileSync(join(directory, 'dist-web', 'index.html'), '<!doctype html><title>Public test page</title>');
   const config = loadConfig({ NODE_ENV: 'test', APP_DATA_DIR: directory, DATABASE_PATH: join(directory, 'test.sqlite') }, directory);
   const database = new AppDatabase(config.databasePath);
   databases.push(database);
@@ -37,6 +39,53 @@ function harness() {
 }
 
 describe('public resident locator API', () => {
+  it('allows origin-restricted Google keys only on the public document, never leaking caretaker URLs', async () => {
+    const { app } = harness();
+    const publicPage = await request(app).get('/?category=Boeken').expect(200);
+    expect(publicPage.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(publicPage.headers['content-security-policy']).toContain('https://*.googleapis.com');
+    for (const path of ['/beheer', '/kastje-bijwerken/secret-token']) {
+      const privatePage = await request(app).get(path).expect(200);
+      expect(privatePage.headers['referrer-policy']).toBe('no-referrer');
+      expect(privatePage.headers['content-security-policy']).not.toContain('googleapis.com');
+    }
+  });
+  it('filters categories before counting and paginating, with OR semantics', async () => {
+    const { app } = harness();
+    const absent = await request(app).get('/api/public/locations').query({ category: 'Planten', limit: 1 }).expect(200);
+    expect(absent.body.data).toMatchObject({ items: [], total: 0 });
+    const present = await request(app).get('/api/public/locations').query({ category: ['Planten', 'Boeken'], limit: 1 }).expect(200);
+    expect(present.body.data.total).toBe(1);
+    expect(present.body.data.items[0].categories).toEqual(['Boeken']);
+  });
+
+  it('validates public filters instead of silently returning an unfiltered catalog', async () => {
+    const { app } = harness();
+    for (const query of ['category=Anything', 'page=NaN', 'limit=0', 'page=1.5', 'province=Atlantis']) {
+      await request(app).get(`/api/public/locations?${query}`).expect(400);
+    }
+    const unknown = await request(app).get('/api/public/locations?category=unknown').expect(200);
+    expect(unknown.body.data.total).toBe(0);
+    const province = await request(app).get('/api/public/locations?province=Gelderland').expect(200);
+    expect(province.body.data.total).toBe(0);
+  });
+
+  it('exports only matching public coordinates and attributions to My Maps, never private evidence', async () => {
+    const { app } = harness();
+    const map = await request(app).get('/api/public/map?category=Boeken').expect(200);
+    expect(map.body.data).toMatchObject({ total: 1, truncated: false });
+    expect(map.body.data.items[0]).toMatchObject({ latitude: 52.0907, longitude: 5.1214 });
+    const exported = await request(app).get('/api/public/locations.kml?category=Boeken').expect(200);
+    expect(exported.headers['content-type']).toContain('application/vnd.google-earth.kml+xml');
+    const xml = exported.text ?? Buffer.from(exported.body).toString();
+    expect(xml).toContain('<coordinates>5.1214,52.0907,0</coordinates>');
+    expect(xml).toContain('Officiële kaart');
+    expect(xml).not.toContain('Interne broninformatie');
+    expect(xml).not.toContain('workspaceId');
+    const empty = await request(app).get('/api/public/locations.kml?category=Planten').expect(200);
+    expect(empty.text ?? Buffer.from(empty.body).toString()).not.toContain('<Placemark>');
+  });
+
   it('returns only published exact locations without source evidence or authentication', async () => {
     const { app } = harness();
 
