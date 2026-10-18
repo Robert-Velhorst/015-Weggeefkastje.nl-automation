@@ -46,6 +46,19 @@ describe('critical path', () => {
     database.close();
   });
 
+  it('preserves item privacy and provenance when PATCH omits creation defaults', async () => {
+    const { database, app } = harness();
+    const agent = request.agent(app);
+    const setup = await agent.post('/api/setup').send({ email: 'owner@example.nl', password: 'correct-horse-battery', displayName: 'Owner', workspaceName: 'Delft' }).expect(201);
+    const write = { 'x-csrf-token': setup.body.data.session.csrfToken };
+    const values = { platformTarget: 'facebook', sourceKind: 'approved_export', sourceName: 'Partner source', confidence: 85, contactMethod: 'email', privacyLevel: 'private' };
+    const created = await agent.post('/api/items').set(write).send({ title: 'Private donation', description: 'A private item for collection.', category: 'Books', city: 'Delft', ...values }).expect(201);
+    const item = created.body.data.item;
+    const updated = await agent.patch(`/api/items/${item.id}`).set(write).send({ version: item.version, title: 'Updated private donation' }).expect(200);
+    expect(updated.body.data.item).toEqual(expect.objectContaining({ title: 'Updated private donation', ...values }));
+    database.close();
+  });
+
   it('requires authentication and CSRF for writes', async () => {
     const { database, app } = harness();
     await request(app).get('/api/dashboard').expect(401);
