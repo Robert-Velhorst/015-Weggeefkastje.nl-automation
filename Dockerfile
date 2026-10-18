@@ -1,4 +1,4 @@
-FROM node:26-bookworm-slim AS build
+FROM node:26.12.0-bookworm-slim@sha256:298992629d69bbd5b2b03ad57094d8e4fcb3a8eeb7c4e25d29de656519568913 AS build
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 make g++ \
@@ -13,7 +13,7 @@ ARG VITE_GOOGLE_MAPS_API_KEY
 ARG VITE_GOOGLE_MAPS_MAP_ID
 RUN npm run build && npm prune --omit=dev
 
-FROM node:26-bookworm-slim AS runtime
+FROM node:26.12.0-bookworm-slim@sha256:298992629d69bbd5b2b03ad57094d8e4fcb3a8eeb7c4e25d29de656519568913 AS runtime
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=3000 APP_DATA_DIR=/app/data DATABASE_PATH=/app/data/weggeefkastjes.sqlite WEB_DIST_PATH=/app/dist-web ALLOW_NETWORK_BINDING=true
 WORKDIR /app
 RUN useradd --system --uid 10001 --create-home appuser

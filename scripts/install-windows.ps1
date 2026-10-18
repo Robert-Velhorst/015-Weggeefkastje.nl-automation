@@ -5,10 +5,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
-if (-not (Get-Command node.exe -ErrorAction SilentlyContinue)) { throw 'Node.js 22-25 is required; Node 24 LTS is recommended.' }
+if (-not (Get-Command node.exe -ErrorAction SilentlyContinue)) { throw 'Node.js 24.22.0 LTS or 26.12.0 current stable is required.' }
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) { throw 'npm.cmd was not found.' }
-$nodeMajor = [int]((& node.exe --version).TrimStart('v').Split('.')[0])
-if ($nodeMajor -lt 22 -or $nodeMajor -ge 26) { throw "Node.js 22-25 is required; found $nodeMajor. Use Node 24 LTS for production." }
+$nodeVersion = [version]((& node.exe --version).TrimStart('v'))
+if (-not (($nodeVersion.Major -eq 24 -and $nodeVersion -ge [version]"24.22.0") -or ($nodeVersion.Major -eq 26 -and $nodeVersion -ge [version]"26.12.0"))) { throw "Node.js 24.22.0 LTS or 26.12.0 current stable is required; found $nodeVersion." }
 
 Push-Location $repoRoot
 try {
