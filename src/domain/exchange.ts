@@ -53,6 +53,12 @@ export const createItemSchema = z.object({
 });
 
 export const updateItemSchema = createItemSchema.partial().extend({
+  platformTarget: createItemSchema.shape.platformTarget.removeDefault().optional(),
+  sourceKind: createItemSchema.shape.sourceKind.removeDefault().optional(),
+  sourceName: createItemSchema.shape.sourceName.removeDefault().optional(),
+  confidence: createItemSchema.shape.confidence.removeDefault().optional(),
+  contactMethod: createItemSchema.shape.contactMethod.removeDefault().optional(),
+  privacyLevel: createItemSchema.shape.privacyLevel.removeDefault().optional(),
   version: z.number().int().positive(),
 });
 
