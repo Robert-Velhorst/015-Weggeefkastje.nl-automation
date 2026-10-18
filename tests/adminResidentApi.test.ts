@@ -41,7 +41,7 @@ describe('authenticated resident catalog API', () => {
     const source = createdSource.body.data;
     await agent.patch(`/api/sources/${source.id}`).set(write()).send({ publicationMode: 'automatic' }).expect(200);
     const sources = await agent.get('/api/sources').expect(200);
-    expect(sources.body.data).toContainEqual(expect.objectContaining({ id: source.id, publicationMode: 'automatic' }));
+    expect(sources.body.data).toContainEqual(expect.objectContaining({ id: source.id, publicationMode: 'automatic', enabled: true, allowsExactAddress: true }));
 
     const reviewSource = database.updateSource(setup.body.data.session.workspaceId, setup.body.data.session.userId, source.id, { publicationMode: 'review' })!;
     const location = database.upsertVerifiedResidentLocation(setup.body.data.session.workspaceId, setup.body.data.session.userId, reviewSource, {

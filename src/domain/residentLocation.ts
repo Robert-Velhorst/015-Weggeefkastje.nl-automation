@@ -48,7 +48,12 @@ export const sourceRegistrationSchema = sourceRegistrationBaseSchema.superRefine
   }
 });
 
-export const sourceUpdateSchema = sourceRegistrationBaseSchema.partial().omit({ key: true });
+// Creation defaults must not turn omitted PATCH fields into updates.
+export const sourceUpdateSchema = sourceRegistrationBaseSchema.partial().omit({ key: true }).extend({
+  publicationMode: z.enum(SOURCE_PUBLICATION_MODES).optional(),
+  enabled: z.boolean().optional(),
+  allowsExactAddress: z.boolean().optional(),
+});
 
 export const residentCandidateSchema = exactAddressSchema.extend({
   sourceKey: z.string().trim().min(3).max(80),
