@@ -1,8 +1,10 @@
-# Windows 11 and ngrok
+# Windows 11 and legacy ngrok
+> The ngrok tunnel is retained only for existing local pilot workflows. It is not the deployment path for new public installations; the repository deployment target is Hetzner.
+
 
 ## Standalone local installation
 
-Install Node.js 20 through 25 and run this once from PowerShell:
+Use Node.js 24.22.0 LTS or Node.js 26.12.0 current stable, then run this once from PowerShell:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-windows.ps1

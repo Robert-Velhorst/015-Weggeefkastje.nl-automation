@@ -163,7 +163,7 @@ De OSM-adapter is een optionele, begrensde pilot. Gebruik alleen een HTTPS Overp
 
 ### Vereisten
 
-- Node.js **>=22 <26** (Node 24 LTS voor productie)
+- Node.js **24.22.0 LTS of 26.12.0 current stable** (de production-Docker-image gebruikt 26.12.0)
 - npm met het meegeleverde **package-lock.json**
 - Windows PowerShell voor de Windows-hulpscripts
 - Alleen voor Docker: Docker Desktop
