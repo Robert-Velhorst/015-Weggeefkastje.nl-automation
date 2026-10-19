@@ -214,7 +214,7 @@ en een lokale Docker Compose-route:
 
     docker compose up --build
 
-Lees voor een publiek HTTPS-eindpunt eerst [docs/WINDOWS_AND_NGROK.md](docs/WINDOWS_AND_NGROK.md). De standaard is loopback-only; maak eerste setup nooit via een tunnel of openbare proxy.
+Lees voor Windows lokaal gebruik en de Hetzner-doelarchitectuur [docs/WINDOWS_AND_LOCAL.md](docs/WINDOWS_AND_LOCAL.md). Houd eerste setup afgeschermd en open geen publieke toegang voordat de eigenaar is aangemaakt.
 
 ## Configuratiereferentie
 
@@ -428,7 +428,7 @@ Voor elke wijziging aan privacy, bronbeleid, migraties, publieke API of provider
 | [docs/DISCOVERY_VERIFICATION_2026-09-05.md](docs/DISCOVERY_VERIFICATION_2026-09-05.md) | Eerste verificatieronde: twee adrescorrecties, 88 publieke locaties en resterende onzekerheden |
 | [docs/VERIFICATION_WORKFLOW.md](docs/VERIFICATION_WORKFLOW.md) | Vondsten onderzoeken in het beheer: zoeken, paginering, bronbewijs, ontbrekende controles, notitiehistorie en veilige import |
 | [docs/SECURITY.md](docs/SECURITY.md) | Dreigingsmodel, controles en restrisico |
-| [docs/WINDOWS_AND_NGROK.md](docs/WINDOWS_AND_NGROK.md) | Windows- en tunneldeployment |
+| [docs/WINDOWS_AND_LOCAL.md](docs/WINDOWS_AND_LOCAL.md) | Windows local operation and Hetzner deployment |
 | [docs/HAI_INTEGRATION.md](docs/HAI_INTEGRATION.md) | Read-only HAI-feed |
 
 Dit pakket is **private** en bevat geen licentiebestand. Hergebruik of publicatie valt buiten deze README en vereist toestemming van de repository-eigenaar.
