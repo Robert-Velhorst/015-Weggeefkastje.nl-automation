@@ -119,4 +119,4 @@ Status is evidence-based: **Complete** means implemented and locally verified; *
 | 112 Versioning/changelog | Complete | Semver package and branch/commit release discipline. |
 | 113 Regression baseline | Complete | 22-test baseline plus CI. |
 | 114 Maintenance/refactor review | Complete | Legacy boundary and debt identified; shared domain/API used. |
-| 115 Human-operator readiness | Partial | Local and Windows production critical paths verified; live provider/ngrok/HAI account acceptance blocked. |
+| 115 Human-operator readiness | Partial | Local and Windows production critical paths verified; live provider, Hetzner, and HAI account acceptance blocked; the workstation tunnel has been retired. |

@@ -39,6 +39,6 @@ The earlier 50-metre coordinate deduplication and review-gated Facebook/Nextdoor
 - Add true multi-member invitations and member management before calling team RBAC complete.
 - Add a standards-based translation catalog if an English UI becomes a real requirement.
 - Live provider acceptance, quota monitoring and account rotation require user-owned credentials and provider approval.
-- Live ngrok/HAI acceptance needs an operator-owned ngrok endpoint and a running owner-authenticated HAI workspace.
+- Hetzner public deployment and receiving-side HAI acceptance remain operator gates; the workstation tunnel has been retired.
 - Docker Compose syntax validates, but the local Docker daemon stopped responding during the bounded image-build verification; CI should rerun the image gate.
 - File uploads, email delivery, billing and AI generation were intentionally not invented for this product.

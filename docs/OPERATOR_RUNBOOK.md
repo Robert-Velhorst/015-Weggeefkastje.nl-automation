@@ -21,7 +21,7 @@ This runbook is for the person or small team that operates the resident finder, 
 
    For one controlled cycle, `npm run ingest` is the safe alias for `npm run worker -- --once`. It uses the governed catalog path. `npm run ingest:legacy` is deliberately separate and must not be used to populate the public resident finder.
 
-Do not expose first setup through ngrok, a reverse proxy or a public network. A network deployment requires a stable HTTPS base URL, secure cookies and explicit network-binding configuration.
+Do not expose first setup to a public network. Public deployment targets Hetzner and requires a stable HTTPS base URL, secure cookies, a reviewed reverse proxy, and explicit network-binding configuration.
 
 ## Website and app release check
 

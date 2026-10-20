@@ -1,5 +1,6 @@
-# Windows 11 and legacy ngrok
-> The ngrok tunnel is retained only for existing local pilot workflows. It is not the deployment path for new public installations; the repository deployment target is Hetzner.
+# Windows 11 local operation and Hetzner deployment
+
+Workstation operation stays on loopback. Public deployment targets Hetzner; see the repository-root `DEPLOYMENT_TARGET.md` for the migration directive and acceptance gates.
 
 
 ## Standalone local installation
@@ -21,19 +22,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\stop-windows.ps1
 
 The server and worker run in hidden background processes. Their validated PIDs are stored under `data/runtime`; logs remain under `data/logs`. The stop script refuses to stop a PID whose command line does not match this application.
 
-## Public HTTPS through ngrok
+## Public deployment
 
-1. Complete local first-run setup before opening any tunnel.
-2. Install the current ngrok v3 agent and run `ngrok config add-authtoken <token>` once.
-3. Use a stable HTTPS endpoint assigned to your ngrok account:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\start-ngrok.ps1 -PublicUrl https://your-domain.ngrok.app
-```
-
-The launcher keeps Express bound to `127.0.0.1`, enables trusted-proxy and secure-cookie behavior, disables remote setup and ngrok request inspection, and refuses to tunnel an uninitialized or unhealthy database. It uses the current `ngrok http 3000 --url https://...` syntax. Authentication and manual-posting review remain required over the public endpoint.
-
-Do not use a random URL for a durable deployment: the application needs its exact HTTPS base URL before it starts so secure sessions remain predictable. Stop the tunnel and application with `scripts\stop-windows.ps1`.
+Use the application container behind a reviewed HTTPS reverse proxy on the Hetzner host. Set the production `APP_BASE_URL`, `TRUST_PROXY=true`, and `COOKIE_SECURE=true` values, keep first-owner setup restricted, and open public ingress only after bootstrap. Do not expose a workstation process as a public service.
 
 ## Docker
 

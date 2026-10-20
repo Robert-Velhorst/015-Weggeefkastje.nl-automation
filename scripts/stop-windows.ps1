@@ -8,7 +8,6 @@ $runtimeDir = Join-Path $repoRoot 'data\runtime'
 $targets = @(
   @{ File = (Join-Path $runtimeDir 'server.pid'); Expected = 'dist/server-main.js' },
   @{ File = (Join-Path $runtimeDir 'worker.pid'); Expected = 'dist/worker.js' },
-  @{ File = (Join-Path $runtimeDir 'ngrok.pid'); Expected = 'ngrok' }
 )
 
 foreach ($target in $targets) {
