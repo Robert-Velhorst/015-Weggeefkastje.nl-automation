@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { assertStableSqliteRuntime } from './stableRuntime.js';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { dirname } from 'node:path';
 import { mkdirSync } from 'node:fs';
@@ -313,6 +314,7 @@ export class AppDatabase {
   readonly migrationResult: { applied: number[]; currentVersion: number };
 
   constructor(path: string) {
+    assertStableSqliteRuntime();
     mkdirSync(dirname(path), { recursive: true });
     this.db = new Database(path);
     try {

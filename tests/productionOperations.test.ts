@@ -16,13 +16,14 @@ afterEach(() => {
   for (const db of handles.splice(0)) db.close();
   for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
-function harness(production = false) {
+function harness(production = false, hiddenWebRoot = false) {
   const dir = mkdtempSync(join(tmpdir(), 'weggeef-production-'));
   directories.push(dir);
-  mkdirSync(join(dir, 'web', 'assets'), { recursive: true });
-  writeFileSync(join(dir, 'web', 'index.html'), '<!doctype html><title>Weggeefkastje</title>');
-  writeFileSync(join(dir, 'web', 'assets', 'index-abcdefgh.js'), 'console.log("asset")');
-  const config = loadConfig({ NODE_ENV: production ? 'production' : 'test', APP_DATA_DIR: dir, WEB_DIST_PATH: join(dir, 'web'), APP_BASE_URL: 'https://kastjes.example.nl', BACKUP_KEEP_COUNT: '2' }, dir);
+  const webRoot = join(dir, hiddenWebRoot ? '.release' : 'web');
+  mkdirSync(join(webRoot, 'assets'), { recursive: true });
+  writeFileSync(join(webRoot, 'index.html'), '<!doctype html><title>Weggeefkastje</title>');
+  writeFileSync(join(webRoot, 'assets', 'index-abcdefgh.js'), 'console.log("asset")');
+  const config = loadConfig({ NODE_ENV: production ? 'production' : 'test', APP_DATA_DIR: dir, WEB_DIST_PATH: webRoot, APP_BASE_URL: 'https://kastjes.example.nl', BACKUP_KEEP_COUNT: '2' }, dir);
   const db = new AppDatabase(config.databasePath);
   handles.push(db);
   return { config, db, dir };
@@ -136,6 +137,17 @@ describe('production HTTP boundary', () => {
       const page = await request(app).get(path).expect(200);
       expect(page.headers['cache-control']).toBe('no-store');
     }
+  });
+  it('serves an explicit hidden release root without exposing dotfiles', async () => {
+    const { db, config } = harness(true, true);
+    writeFileSync(join(config.webDistPath, '.env'), 'synthetic-private-value');
+    const app = createApp(config, db);
+    for (const path of ['/', '/beheer', '/kastje-bijwerken/bearer']) {
+      await request(app).get(path).expect(200);
+    }
+    await request(app).get('/assets/index-abcdefgh.js').expect(200);
+    const denied = await request(app).get('/.env').expect(404);
+    expect(denied.text).not.toContain('synthetic-private-value');
   });
   it('tracks service heartbeat and does not accept missing or stale state', () => {
     const { dir } = harness();
