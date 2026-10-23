@@ -572,7 +572,9 @@ export function createApp(config: AppConfig, database: AppDatabase, dependencies
     }));
     app.get(/^(?:\/|\/beheer(?:\/.*)?|\/kastje-bijwerken\/[^/]+)$/, (_req, res) => {
       res.setHeader('cache-control', 'no-store');
-      res.sendFile(join(config.webDistPath, 'index.html'));
+      // Scope dotfile checks to the explicit public root, not its parent path
+      // (a checkout or release directory can itself begin with a dot).
+      res.sendFile('index.html', { root: config.webDistPath });
     });
   }
 
