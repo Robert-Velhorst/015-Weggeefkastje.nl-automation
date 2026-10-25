@@ -471,7 +471,7 @@ export class AppDatabase {
     if (request.city) { clauses.push('city = ? COLLATE NOCASE'); parameters.push(request.city); }
     if (request.query) {
       clauses.push("(title LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\' OR city LIKE ? ESCAPE '\\')");
-      const query = `%${request.query.replace(/[%_]/g, '\\$&')}%`;
+      const query = `%${request.query.replace(/[\\%_]/g, '\\$&')}%`;
       parameters.push(query, query, query);
     }
     if (!request.includeArchived) clauses.push("status <> 'archived'");
