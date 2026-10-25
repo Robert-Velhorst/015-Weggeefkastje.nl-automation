@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3';
+import { assertStableSqliteRuntime } from './stableRuntime.js';
 import { dirname } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
@@ -31,6 +32,7 @@ function decodeCategories(value: string | null | undefined): StoredLocation['cat
 }
 
 export function openDatabase(path: string): AppDb {
+  assertStableSqliteRuntime();
   mkdirSync(dirname(path), { recursive: true });
   const db = new Database(path);
   db.pragma('journal_mode = WAL');

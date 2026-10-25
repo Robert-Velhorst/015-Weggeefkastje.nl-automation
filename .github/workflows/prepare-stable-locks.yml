@@ -1,0 +1,70 @@
+name: Prepare stable locked dependency metadata
+
+on:
+  pull_request:
+    paths: ['.github/workflows/prepare-stable-locks.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-locks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.12.1'
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.15.1'
+      - name: Record exact input source and original files
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          mkdir -p "$RUNNER_TEMP/weggeef-locks"
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, subprocess, os
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          data = {'tested_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                  'tested_tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
+                  'tracked_file_sha256': {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths if p and Path(p).is_file()},
+                  'preparation_only': True, 'application_or_native_execution': False}
+          (Path(os.environ['RUNNER_TEMP']) / 'weggeef-locks/source-identity.json').write_text(json.dumps(data, indent=2) + '\n')
+          PY
+      - name: Resolve both graphs through their declared ranges
+        run: |
+          npm install --global npm@12.2.1
+          npm update --package-lock-only
+          npm --prefix tools/lint update --package-lock-only
+      - name: Verify that only the two lockfiles changed
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, subprocess, os, shutil
+          out = Path(os.environ['RUNNER_TEMP']) / 'weggeef-locks'
+          before = json.loads((out / 'source-identity.json').read_text())
+          allowed = {'package-lock.json', 'tools/lint/package-lock.json'}
+          changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          assert set(changed) <= allowed, changed
+          for name, digest in before['tracked_file_sha256'].items():
+              if name not in allowed:
+                  assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest, name
+          shutil.copyfile('package-lock.json', out / 'root-package-lock.json')
+          shutil.copyfile('tools/lint/package-lock.json', out / 'lint-package-lock.json')
+          PY
+      - name: Audit the complete refreshed application graph
+        run: npm audit --json > "$RUNNER_TEMP/weggeef-locks/root-audit.json"
+      - name: Audit the complete refreshed lint graph
+        if: ${{ !cancelled() }}
+        run: npm --prefix tools/lint audit --json > "$RUNNER_TEMP/weggeef-locks/lint-audit.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: current-stable-lock-preparation
+          path: ${{ runner.temp }}/weggeef-locks/
+          retention-days: 7
+          if-no-files-found: error

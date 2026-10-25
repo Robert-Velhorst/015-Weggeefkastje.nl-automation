@@ -2,10 +2,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import Database from 'better-sqlite3';
+import { assertStableSqliteRuntime } from '../db/stableRuntime.js';
 import { AppDatabase } from '../db/appDatabase.js';
 import { resolveWithin, type AppConfig } from '../config.js';
 
 function validate(path: string): void {
+  assertStableSqliteRuntime();
   const db = new Database(path, { readonly: true, fileMustExist: true });
   try {
     const integrity = db.pragma('integrity_check') as Array<{ integrity_check: string }>;
@@ -21,6 +23,7 @@ function validate(path: string): void {
 }
 
 export async function createVerifiedBackup(config: AppConfig): Promise<string> {
+  assertStableSqliteRuntime();
   if (!existsSync(config.databasePath)) throw new Error('Database does not exist.');
   const folder = resolveWithin(config.dataDir, 'backups');
   mkdirSync(folder, { recursive: true, mode: 0o700 });
