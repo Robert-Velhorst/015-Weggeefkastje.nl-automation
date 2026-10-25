@@ -10,15 +10,41 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ["24.22.0", "26.12.0"]
+        node-version: ["24.22.1", "26.12.1"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.15.1'
+      - name: Record exact source and original case identity
+        shell: bash
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          mkdir -p output
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, subprocess
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          record = {'tested_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                    'tested_tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
+                    'tracked_file_sha256': {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths if p and Path(p).is_file()},
+                    'operator_data_or_deployment_changes': False}
+          Path('output/source-identity.json').write_text(json.dumps(record, indent=2) + '\n')
+          PY
+      - run: npm install --global npm@12.2.1
       - run: npm ci
-      - run: npm audit
+      - run: npm run lint:install
+      - run: npm --prefix tools/lint audit --audit-level=low
+      - run: npm run build:sqlite -- --require-upgrade-baseline
+      - name: Record actual runtime and SQLite
+        run: |
+          mkdir -p output
+          node scripts/verify-stable-runtime.mjs > output/stable-runtime-verification.json
+      - run: npm audit --audit-level=low
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -42,8 +68,106 @@ jobs:
             sleep 2
           done
           exit 1
+      - name: Verify the actual production container runtime
+        run: docker exec -i weggeef-ci node --input-type=module - --container < scripts/verify-stable-runtime.mjs > output/container-runtime-verification.json
+      - name: Record the actual saved production image identity
+        id: image_archive
+        run: |
+          docker image inspect weggeefkastje-automation:test > output/image-inspect.json
+          docker image save weggeefkastje-automation:test --output output/image.tar
+          chmod 0444 output/image.tar
+          python scripts/image-archive-identity.py output/image.tar output/image-inspect.json weggeefkastje-automation:test output/image-identity.json output/image-config-id.txt
+      - name: Scan all installed production packages
+        run: |
+          docker run --rm --read-only --tmpfs /tmp:rw,size=2048m --cap-drop ALL \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/output/image.tar,target=/scan/image.tar,readonly" \
+            aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c \
+            image --cache-dir /tmp/trivy-cache --scanners vuln --ignorefile /dev/null --list-all-pkgs \
+            --exit-code 1 --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --format json --input /scan/image.tar > output/image-security.json
+      - name: Verify complete image inventory and its saved configuration
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          report = json.loads(Path('output/image-security.json').read_text())
+          identity = json.loads(Path('output/image-identity.json').read_text())
+          assert identity['verified_descriptor_chain']
+          assert report['Metadata']['ImageID'] == identity['config_id']
+          PY
+          node scripts/check-image-security.mjs
+      - name: Preserve every saved runtime layer for independent inspection
+        if: ${{ !cancelled() && steps.image_archive.outcome == 'success' }}
+        run: |
+          gzip -1 -c output/image.tar > output/image.tar.gz
+          sha256sum output/image.tar.gz > output/image.tar.gz.sha256
+      - name: Retain synthetic runtime and installed-image evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stable-linux-${{ matrix.node-version }}
+          path: |
+            output/*verification.json
+            output/image-security.json
+            output/image-inspect.json
+            output/image-identity.json
+            output/image-config-id.txt
+            output/image.tar.gz
+            output/image.tar.gz.sha256
+            output/source-identity.json
       - name: Clean up CI-owned containers
         if: always()
         run: |
           docker rm -f weggeef-ci || true
           docker volume rm weggeef-test || true
+
+  windows-source:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.12.1'
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.15.1'
+      - name: Record exact source and original case identity
+        shell: bash
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          mkdir -p output
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, subprocess
+          paths = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          record = {'tested_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+                    'tested_tree': subprocess.check_output(['git', 'rev-parse', 'HEAD^{tree}'], text=True).strip(),
+                    'tracked_file_sha256': {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths if p and Path(p).is_file()},
+                    'operator_data_or_deployment_changes': False}
+          Path('output/source-identity.json').write_text(json.dumps(record, indent=2) + '\n')
+          PY
+      - run: npm install --global npm@12.2.1
+      - run: npm ci
+      - run: npm run lint:install
+      - run: npm --prefix tools/lint audit --audit-level=low
+      - run: npm run build:sqlite -- --require-upgrade-baseline
+      - name: Record actual Windows runtime
+        shell: bash
+        run: |
+          mkdir -p output
+          node scripts/verify-stable-runtime.mjs > output/stable-runtime-verification.json
+      - run: npm audit --audit-level=low
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run smoke:production
+      - name: Retain actual Windows SQLite build and runtime evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stable-windows
+          path: |
+            output/*verification.json
+            output/source-identity.json

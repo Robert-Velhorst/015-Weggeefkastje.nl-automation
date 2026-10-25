@@ -14,7 +14,7 @@ App, worker en back-upservice gebruiken dezelfde release-image, draaien zonder r
 
 ## Beslissingen vóór livegang
 
-De operator moet het domein, de host, DNS en eventuele Google Maps-accountkosten bepalen. Dit bestand registreert geen domein, huurt geen server en activeert geen betaalde API. Gebruik een ondersteunde Linux-host met Docker Engine en Compose v2+, minimaal 2 CPU's en 2 GB RAM als startpunt; meet capaciteit op de echte host. De release-image gebruikt Node.js 26.12.0, vastgezet op de geverifieerde image-digest. Gebruik lokale block storage, geen NFS/SMB voor SQLite WAL.
+De operator moet het domein, de host, DNS en eventuele Google Maps-accountkosten bepalen. Dit bestand registreert geen domein, huurt geen server en activeert geen betaalde API. Gebruik een ondersteunde Linux-host met Docker Engine en Compose v2+, minimaal 2 CPU's en 2 GB RAM als startpunt; meet capaciteit op de echte host. De release-image gebruikt Node.js 26.12.1, vastgezet op de geverifieerde image-digest. Gebruik lokale block storage, geen NFS/SMB voor SQLite WAL.
 
 DNS A/AAAA moeten naar deze host wijzen. Alleen SSH (beperkt tot beheerders), 80/tcp en 443/tcp moeten bereikbaar zijn; 443/udp is optioneel voor HTTP/3. Poort 3000 wordt niet publiek aangeboden. Zet niet zonder configuratiecontrole nog een CDN/reverse proxy vóór Caddy: Express vertrouwt precies één proxyhop.
 
@@ -26,6 +26,8 @@ Werk vanuit een gecontroleerde checkout. Bewaar de exacte Git-revisie, lockfile 
 
 ```sh
 npm ci
+npm run build:sqlite
+npm run lint:install
 npm audit
 npm run lint
 npm run typecheck

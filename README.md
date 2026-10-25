@@ -163,8 +163,9 @@ De OSM-adapter is een optionele, begrensde pilot. Gebruik alleen een HTTPS Overp
 
 ### Vereisten
 
-- Node.js **24.22.0 LTS of 26.12.0 current stable** (de production-Docker-image gebruikt 26.12.0)
-- npm met het meegeleverde **package-lock.json**
+- Node.js **24.22.1 LTS of 26.12.1 current stable** (de production-Docker-image gebruikt 26.12.1)
+- npm **12.2.1** met het meegeleverde **package-lock.json**
+- Voor de SQLite-build: Python 3 en een C++-compiler (Windows: Visual Studio 2022 C++ Build Tools; Linux: make en g++). `npm run build:sqlite` bouwt de vastgezette SQLite 3.54.1 voor deze checkout; een ontbrekende of oudere engine wordt geweigerd voordat applicatiedata wordt geopend.
 - Windows PowerShell voor de Windows-hulpscripts
 - Alleen voor Docker: Docker Desktop
 
@@ -172,6 +173,8 @@ De OSM-adapter is een optionele, begrensde pilot. Gebruik alleen een HTTPS Overp
 
     Copy-Item .env.example .env
     npm ci
+    npm run build:sqlite
+    npm run lint:install
     npm run migrate
     npm run dev
 
@@ -194,6 +197,8 @@ Voor CI, een geplande taak of een handmatige eenmalige inname is **npm run inges
 ### Lokale productiebuild
 
     npm ci
+    npm run build:sqlite
+    npm run lint:install
     npm run build
     npm run migrate
     npm start
@@ -369,6 +374,8 @@ Bij een incident: schakel de veiligheidstop in, stop de worker, roteer externe c
 Voer voor een wijziging minimaal uit:
 
     npm ci
+    npm run build:sqlite
+    npm run lint:install
     npm run lint
     npm run typecheck
     npm test
